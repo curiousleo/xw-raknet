@@ -1,0 +1,42 @@
+/*
+    This file is part of "xWorlds utilities".
+
+    "xWorlds utilities" is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    "xWorlds utilities" is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
+
+ */
+package eu.xworlds.util.raknet;
+
+/**
+ * Pipeline for incoming server connections.
+ * 
+ * @author mepeisen
+ */
+class RaknetHandler
+{
+    
+    /** the raknet server listeners. */
+    private RaknetServerListener[] listeners;
+    
+    /**
+     * The handler for incoming connections.
+     * 
+     * @param serverListeners
+     *            the server listeners.
+     */
+    public RaknetHandler(RaknetServerListener[] serverListeners)
+    {
+        this.listeners = serverListeners;
+    }
+    
+}
