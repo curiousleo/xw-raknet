@@ -18,8 +18,10 @@
 package eu.xworlds.util.raknet.protocol;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * Message "OutOfBandInternal".
@@ -38,6 +40,15 @@ public class OutOfBandInternal extends TargetedMessage
     
     /** the raknet message id */
     public static final byte ID = 0x0D;
+    
+    /** the guid */
+    private long guid;
+    
+    /** the magic */
+    private byte[] magic;
+    
+    /** the out of bands extra data */
+    private byte[] oobData;
     
     /**
      * Constructor for incoming message.
@@ -60,6 +71,54 @@ public class OutOfBandInternal extends TargetedMessage
         super(sender, receiver);
     }
 
+    /**
+     * @return the guid
+     */
+    public long getGuid()
+    {
+        return this.guid;
+    }
+
+    /**
+     * @param guid the guid to set
+     */
+    public void setGuid(long guid)
+    {
+        this.guid = guid;
+    }
+
+    /**
+     * @return the magic
+     */
+    public byte[] getMagic()
+    {
+        return this.magic;
+    }
+
+    /**
+     * @param magic the magic to set
+     */
+    public void setMagic(byte[] magic)
+    {
+        this.magic = magic;
+    }
+
+    /**
+     * @return the oobData
+     */
+    public byte[] getOobData()
+    {
+        return this.oobData;
+    }
+
+    /**
+     * @param oobData the oobData to set
+     */
+    public void setOobData(byte[] oobData)
+    {
+        this.oobData = oobData;
+    }
+
     @Override
     public byte getId()
     {
@@ -69,15 +128,39 @@ public class OutOfBandInternal extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        // TODO Auto-generated method stub
-        return null;
+        int size = 1 + 8 + this.magic.length;
+        if (this.oobData != null)
+        {
+            size += this.oobData.length;
+        }
+        final ByteBuf buf = Unpooled.buffer(size);
+        buf.order(ByteOrder.BIG_ENDIAN);
+        buf.writeByte(ID);
+        buf.writeLong(this.guid);
+        buf.writeBytes(this.magic);
+        if (this.oobData != null)
+        {
+            buf.writeBytes(this.oobData);
+        }
+        return buf;
     }
     
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        // TODO Auto-generated method stub
-        
+        this.guid = buf.readLong();
+        this.magic = new byte[MAGIC_BYTES];
+        buf.readBytes(this.magic);
+        if (buf.readableBytes() > 0)
+        {
+            this.oobData = buf.readBytes(buf.readableBytes()).array();
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return "OutOfBandInternal [guid=" + this.guid + ", magic=" + tohex(this.magic) + ", oobData=" + tohex(this.oobData) + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }
     
 }

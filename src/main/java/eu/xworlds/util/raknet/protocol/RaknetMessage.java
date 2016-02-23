@@ -34,6 +34,9 @@ public interface RaknetMessage
             (byte)0xFD,(byte)0xFD,(byte)0xFD,(byte)0xFD,
             0x12,0x34,0x56,0x78};
     
+    /** the magic size */
+    int MAGIC_BYTES = 16;
+    
     /** constant for easy handshake */
     int EASYHANDSHAKE_BITS = 256;
     /** constant for easy handshake */

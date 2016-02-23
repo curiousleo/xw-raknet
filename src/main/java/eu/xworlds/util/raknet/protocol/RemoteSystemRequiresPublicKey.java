@@ -18,8 +18,10 @@
 package eu.xworlds.util.raknet.protocol;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * Message "RemoteSystemRequiresPublicKey".
@@ -38,6 +40,38 @@ public class RemoteSystemRequiresPublicKey extends TargetedMessage
     /** the raknet message id */
     public static final byte ID = 0x0A;
     
+    /**
+     * Possible error types
+     */
+    public enum ErrorType
+    {
+        /** ConnectionReply2 package did not send handshake but we need security */
+        ServerPublicKeyMissing,
+        /** Client did not sent a public key during connect */
+        ClientIdentityMissing,
+        /** Client sent a public key but the ident was invalid */
+        ClientIdentityInvalid
+    }
+    
+    /** the error type */
+    private ErrorType error;
+    
+    /**
+     * @return the error
+     */
+    public ErrorType getError()
+    {
+        return this.error;
+    }
+
+    /**
+     * @param error the error to set
+     */
+    public void setError(ErrorType error)
+    {
+        this.error = error;
+    }
+
     /**
      * Constructor for incoming message.
      * @param buf message data
@@ -68,15 +102,23 @@ public class RemoteSystemRequiresPublicKey extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        // TODO Auto-generated method stub
-        return null;
+        final ByteBuf buf = Unpooled.buffer(1 + 1);
+        buf.order(ByteOrder.BIG_ENDIAN);
+        buf.writeByte(ID);
+        buf.writeByte(this.error.ordinal());
+        return buf;
     }
     
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        // TODO Auto-generated method stub
-        
+        this.error = ErrorType.values()[buf.readByte()];
+    }
+
+    @Override
+    public String toString()
+    {
+        return "RemoteSystemRequiresPublicKey [error=" + this.error + "]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

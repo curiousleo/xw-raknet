@@ -228,7 +228,7 @@ public class OpenConnectionReply2 extends TargetedMessage
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.magic = new byte[16];
+        this.magic = new byte[MAGIC_BYTES];
         buf.readBytes(this.magic);
         this.serverGuid = buf.readLong();
         this.port = buf.readUnsignedShort();

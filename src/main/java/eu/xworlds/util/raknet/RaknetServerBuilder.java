@@ -53,12 +53,12 @@ public class RaknetServerBuilder
     /**
      * The network addresses to be used.
      */
-    private final List<InetSocketAddress>    interfaces = new ArrayList<>();
+    private final List<InetSocketAddress>    interfaces         = new ArrayList<>();
     
     /**
      * the raknet server listeners.
      */
-    private final List<RaknetServerListener> listeners  = new ArrayList<>();
+    private final List<RaknetServerListener> listeners          = new ArrayList<>();
     
     /**
      * The nio sender group
@@ -73,12 +73,17 @@ public class RaknetServerBuilder
     /**
      * The network recv buffer
      */
-    private int                              recvBuffer = 52 * 1024;                                            // 52k = BSD 4.3 limit
+    private int                              recvBuffer         = 52 * 1024;        // 52k = BSD 4.3 limit
     
     /**
      * The network send buffer
      */
-    private int                              sendBuffer = 52 * 1024;                                            // 52k = BSD 4.3 limit
+    private int                              sendBuffer         = 52 * 1024;        // 52k = BSD 4.3 limit
+    
+    /**
+     * the session read timeout
+     */
+    private int                              sessionReadTimeout = 15 * 1000;        // within at least 15 seconds there should be a ping
     
     /**
      * Builds the server and starts connecting/binding in background.
@@ -101,8 +106,21 @@ public class RaknetServerBuilder
         final NioEventLoopGroup sGroup = this.senderGroup == null ? new NioEventLoopGroup() : this.senderGroup;
         final NioEventLoopGroup rGroup = this.receiverGroup == null ? new NioEventLoopGroup() : this.receiverGroup;
         
-        final RaknetServer result = new RaknetServer(addresses, serverListeners, this.recvBuffer, this.sendBuffer, sGroup, rGroup);
+        final RaknetServer result = new RaknetServer(addresses, serverListeners, this.recvBuffer, this.sendBuffer, sGroup, rGroup, this.sessionReadTimeout);
         return result;
+    }
+    
+    /**
+     * Sets the session read timeout in milliseconds
+     * 
+     * @param milliseconds
+     *            amount of milliseconds a session will be alive if there is no network traffic
+     * @return this builder
+     */
+    public RaknetServerBuilder setSessionReadTimeout(int milliseconds)
+    {
+        this.sessionReadTimeout = milliseconds;
+        return this;
     }
     
     /**

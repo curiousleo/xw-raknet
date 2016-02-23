@@ -18,8 +18,10 @@
 package eu.xworlds.util.raknet.protocol;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * Message "SndReceiptAcked".
@@ -41,6 +43,9 @@ public class SndReceiptAcked extends TargetedMessage
     
     /** the raknet message id */
     public static final byte ID = 0x0E;
+    
+    /** the serial */
+    private long serial;
     
     /**
      * Constructor for incoming message.
@@ -69,18 +74,42 @@ public class SndReceiptAcked extends TargetedMessage
         return ID;
     }
     
+    /**
+     * @return the serial
+     */
+    public long getSerial()
+    {
+        return this.serial;
+    }
+
+    /**
+     * @param serial the serial to set
+     */
+    public void setSerial(long serial)
+    {
+        this.serial = serial;
+    }
+
     @Override
     public ByteBuf encode()
     {
-        // TODO Auto-generated method stub
-        return null;
+        final ByteBuf buf = Unpooled.buffer(1 + 4);
+        buf.order(ByteOrder.BIG_ENDIAN);
+        buf.writeByte(ID);
+        writeUnsignedInt(buf, this.serial);
+        return buf;
     }
     
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        // TODO Auto-generated method stub
-        
+        this.serial = buf.readUnsignedInt();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "SndReceiptAcked [serial=" + this.serial + "]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

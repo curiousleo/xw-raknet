@@ -20,6 +20,7 @@ package eu.xworlds.util.raknet;
 import java.util.Map;
 
 import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -49,9 +50,10 @@ public interface RaknetServerListener
     void onChannelClosed(Channel channel);
 
     /**
+     * @param raknetServer 
      * @return
      */
-    ChannelHandler[] getHandlerPipeline();
+    ChannelHandler[] getHandlerPipeline(RaknetServer raknetServer);
 
     /**
      * @param ctx
@@ -64,5 +66,21 @@ public interface RaknetServerListener
      * @return
      */
     Map<Byte, Class<? extends RaknetMessage>> getMessageClasses();
+
+    /**
+     * @return
+     */
+    Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> getMessageHandlers();
+
+    /**
+     * @param value
+     */
+    void onRemoval(RaknetSession value);
+
+    /**
+     * @param session
+     * @return
+     */
+    boolean onNewSession(RaknetSession session);
     
 }

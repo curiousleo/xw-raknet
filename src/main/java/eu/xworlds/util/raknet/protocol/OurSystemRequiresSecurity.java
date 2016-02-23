@@ -18,8 +18,10 @@
 package eu.xworlds.util.raknet.protocol;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * Message "OurSystemRequiresSecurity".
@@ -68,15 +70,22 @@ public class OurSystemRequiresSecurity extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        // TODO Auto-generated method stub
-        return null;
+        final ByteBuf buf = Unpooled.buffer(1);
+        buf.order(ByteOrder.BIG_ENDIAN);
+        buf.writeByte(ID);
+        return buf;
     }
     
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        // TODO Auto-generated method stub
-        
+        // no extra data
+    }
+
+    @Override
+    public String toString()
+    {
+        return "OurSystemRequiresSecurity []"; //$NON-NLS-1$
     }
     
 }

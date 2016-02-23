@@ -142,7 +142,7 @@ public class OpenConnectionRequest1 extends TargetedMessage
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.magic = new byte[16];
+        this.magic = new byte[MAGIC_BYTES];
         buf.readBytes(this.magic);
         this.procotolVersion = buf.readByte();
         this.mtuPayload = buf.readBytes(buf.readableBytes()).array();

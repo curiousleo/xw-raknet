@@ -17,16 +17,24 @@
  */
 package eu.xworlds.util.raknet;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
+
 /**
  * Pipeline for incoming server connections.
  * 
  * @author mepeisen
  */
-class RaknetHandler
+class RaknetHandler extends MessageToMessageDecoder<TargetedMessage>
 {
     
-    /** the raknet server listeners. */
-    private RaknetServerListener[] listeners;
+    /** the well known raknet message handler */
+    private final Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> handlers = new HashMap<>();
     
     /**
      * The handler for incoming connections.
@@ -36,7 +44,30 @@ class RaknetHandler
      */
     public RaknetHandler(RaknetServerListener[] serverListeners)
     {
-        this.listeners = serverListeners;
+        this.handlers.putAll(this.getDefaulHandlers());
+        for (final RaknetServerListener listener : serverListeners)
+        {
+            final Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> messageClasses = listener.getMessageHandlers();
+            this.handlers.putAll(messageClasses);
+        }
+    }
+    
+    /**
+     * Returns the default message handlers.
+     * @return map with default message handlers for managing the protocol.
+     */
+    private Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> getDefaulHandlers()
+    {
+        final Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> result = new HashMap<>();
+        // TODO Auto-generated method stub
+        return result;
+    }
+
+    @Override
+    protected void decode(ChannelHandlerContext ctx, TargetedMessage msg, List<Object> out) throws Exception
+    {
+        // TODO Auto-generated method stub
+        
     }
     
 }

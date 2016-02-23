@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
+import eu.xworlds.util.raknet.protocol.InvalidRaknetMessage;
 import eu.xworlds.util.raknet.protocol.RaknetMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -68,10 +69,10 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
         final ByteBuf buf = msg.content();
         buf.order(ByteOrder.BIG_ENDIAN);
         final byte id = buf.readByte();
-        final Constructor<? extends RaknetMessage> ctor = this.messages.get(id);
+        final Constructor<? extends RaknetMessage> ctor = this.messages.get(Byte.valueOf(id));
         if (ctor == null)
         {
-            final RaknetMessage result = new InvalidRaknetMessage(buf, msg.sender(), msg.recipient());
+            final RaknetMessage result = new InvalidRaknetMessage(id, buf, msg.sender(), msg.recipient());
             out.add(result);
         }
         else
@@ -83,7 +84,7 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
             }
             catch (Exception ex)
             {
-                final RaknetMessage result = new InvalidRaknetMessage(buf, msg.sender(), msg.recipient(), ex);
+                final RaknetMessage result = new InvalidRaknetMessage(id, buf, msg.sender(), msg.recipient(), ex);
                 out.add(result);
             }
         }

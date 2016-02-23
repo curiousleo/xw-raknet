@@ -18,8 +18,10 @@
 package eu.xworlds.util.raknet.protocol;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 /**
  * Message "ConnectionRequest".
@@ -83,11 +85,144 @@ public class ConnectionRequest extends TargetedMessage
         return ID;
     }
     
+    /**
+     * @return the clientGuid
+     */
+    public long getClientGuid()
+    {
+        return this.clientGuid;
+    }
+
+    /**
+     * @param clientGuid the clientGuid to set
+     */
+    public void setClientGuid(long clientGuid)
+    {
+        this.clientGuid = clientGuid;
+    }
+
+    /**
+     * @return the time
+     */
+    public long getTime()
+    {
+        return this.time;
+    }
+
+    /**
+     * @param time the time to set
+     */
+    public void setTime(long time)
+    {
+        this.time = time;
+    }
+
+    /**
+     * @return the doSecurity
+     */
+    public boolean isDoSecurity()
+    {
+        return this.doSecurity;
+    }
+
+    /**
+     * @return the proof
+     */
+    public byte[] getProof()
+    {
+        return this.proof;
+    }
+
+    /**
+     * @return the doIdentity
+     */
+    public boolean isDoIdentity()
+    {
+        return this.doIdentity;
+    }
+
+    /**
+     * @return the identity
+     */
+    public byte[] getIdentity()
+    {
+        return this.identity;
+    }
+    
+    /**
+     * Sets doSecurity to false
+     */
+    public void setNoSecurity()
+    {
+        this.doSecurity = false;
+    }
+    
+    /**
+     * Sets security to true with given proof
+     * @param proof security proof
+     * @throws IllegalArgumentException thrown if proof is invalid
+     */
+    public void setSecurity(byte[] proof)
+    {
+        if (proof == null || proof.length != 32)
+        {
+            throw new IllegalArgumentException("Invalid proof"); //$NON-NLS-1$
+        }
+        this.doSecurity = true;
+        this.proof = proof;
+        this.doIdentity = false;
+    }
+    
+    /**
+     * Sets security to true with given proof and identity
+     * @param proof security proof
+     * @param ident security identity
+     * @throws IllegalArgumentException thrown if proof or identity are invalid
+     */
+    public void setSecurity(byte[] proof, byte[] ident)
+    {
+        if (proof == null || proof.length != 32)
+        {
+            throw new IllegalArgumentException("Invalid proof"); //$NON-NLS-1$
+        }
+        if (ident == null || ident.length != EASYHANDSHAKE_IDENTITY_BYTES)
+        {
+            throw new IllegalArgumentException("Invalid ident"); //$NON-NLS-1$
+        }
+        this.doSecurity = true;
+        this.proof = proof;
+        this.doIdentity = true;
+        this.identity = ident;
+    }
+
     @Override
     public ByteBuf encode()
     {
-        // TODO Auto-generated method stub
-        return null;
+        int size = 1 + 8 + 8 + 1;
+        if (this.doSecurity)
+        {
+            size += 32 + 1;
+            if (this.doIdentity)
+            {
+                size += EASYHANDSHAKE_IDENTITY_BYTES;
+            }
+        }
+        final ByteBuf buf = Unpooled.buffer(size);
+        buf.order(ByteOrder.BIG_ENDIAN);
+        buf.writeByte(ID);
+        buf.writeLong(this.clientGuid);
+        buf.writeLong(this.time);
+        buf.writeBoolean(this.doSecurity);
+        if (this.doSecurity)
+        {
+            buf.writeBytes(this.proof);
+            buf.writeBoolean(this.doIdentity);
+            if (this.doIdentity)
+            {
+                buf.writeBytes(this.identity);
+            }
+        }
+        return buf;
     }
     
     @Override
@@ -107,6 +242,13 @@ public class ConnectionRequest extends TargetedMessage
                 buf.readBytes(this.identity);
             }
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return "ConnectionRequest [clientGuid=" + this.clientGuid + ", time=" + this.time + ", doSecurity=" + String.valueOf(this.doSecurity) + ", proof=" + tohex(this.proof) + ", doIdentity="   //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$
+                + String.valueOf(this.doIdentity) + ", identity=" + tohex(this.identity) + "]"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 }

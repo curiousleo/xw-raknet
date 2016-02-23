@@ -89,7 +89,7 @@ public class UnconnectedPing extends TargetedMessage
     protected void parseMessage(ByteBuf buf)
     {
         this.time = buf.readLong();
-        this.magic = new byte[16];
+        this.magic = new byte[MAGIC_BYTES];
         buf.readBytes(this.magic.length);
     }
 

@@ -23,8 +23,16 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -59,65 +67,70 @@ public class RaknetServer
 {
     
     /** the logger instance */
-    static final Logger                   LOGGER            = Logger.getLogger(RaknetServer.class.getName());
+    static final Logger                                      LOGGER            = Logger.getLogger(RaknetServer.class.getName());
     
-    /**
-     * The addresses to bind to.
-     */
-    private InetSocketAddress[]           addresses;
+//    /**
+//     * The addresses to bind to.
+//     */
+//    private InetSocketAddress[]                              addresses;
     
     /**
      * The server listeners.
      */
-    RaknetServerListener[]                serverListeners;
+    RaknetServerListener[]                                   serverListeners;
     
     /**
      * the recv buffer size.
      */
-    private int                           recvBuffer;
+    private int                                              recvBuffer;
     
     /**
      * the send buffer size.
      */
-    private int                           sendBuffer;
+    private int                                              sendBuffer;
     
     /**
      * The sender nio worker group.
      */
-    private NioEventLoopGroup             senderGroup;
+    private NioEventLoopGroup                                senderGroup;
     
     /**
      * The receiver nio working group.
      */
-    private NioEventLoopGroup             receiverGroup;
+    private NioEventLoopGroup                                receiverGroup;
     
     /**
      * The futures for binding.
      */
-    final Collection<ChannelFuture>       listenFutures     = new ConcurrentLinkedQueue<>();
+    final Collection<ChannelFuture>                          listenFutures     = new ConcurrentLinkedQueue<>();
     
     /**
      * The futures for closing.
      */
-    final Collection<ChannelFuture>       closeFutures      = new ConcurrentLinkedQueue<>();
+    final Collection<ChannelFuture>                          closeFutures      = new ConcurrentLinkedQueue<>();
     
     /**
      * The channels where network traffic is incomming.
      */
-    final Map<InetSocketAddress, Channel> incommingChannels = new HashMap<>();
+    final Map<InetSocketAddress, Channel>                    incommingChannels = new HashMap<>();
     
     /**
      * The closing flag
      */
-    boolean                               isClosing         = false;
+    boolean                                                  isClosing         = false;
     
     /**
      * The trace flag.
      */
-    boolean                               isTracing         = LOGGER.isLoggable(Level.FINEST);
+    boolean                                                  isTracing         = LOGGER.isLoggable(Level.FINEST);
     
     /** The time this server started */
-    final long                            startupTime       = ManagementFactory.getRuntimeMXBean().getUptime();
+    final long                                               startupTime       = ManagementFactory.getRuntimeMXBean().getUptime();
+    
+    /**
+     * The session cache.
+     */
+    private final LoadingCache<InetSocketCon, RaknetSession> sessions;
     
     /**
      * Hidden constructor.
@@ -134,16 +147,21 @@ public class RaknetServer
      *            the sender nio group.
      * @param rGroup
      *            the receiver nio group.
+     * @param sessionReadTimeout
+     *            the raknet session read timeout in milliseconds
      */
-    RaknetServer(InetSocketAddress[] addresses, RaknetServerListener[] serverListeners, int recvBuffer, int sendBuffer, NioEventLoopGroup sGroup, NioEventLoopGroup rGroup)
+    RaknetServer(InetSocketAddress[] addresses, RaknetServerListener[] serverListeners, int recvBuffer, int sendBuffer, NioEventLoopGroup sGroup, NioEventLoopGroup rGroup, int sessionReadTimeout)
     {
-        this.addresses = addresses;
+//        this.addresses = addresses;
         this.serverListeners = serverListeners;
         this.recvBuffer = recvBuffer;
         this.sendBuffer = sendBuffer;
         this.senderGroup = sGroup;
         this.receiverGroup = rGroup;
         
+        this.sessions = CacheBuilder.newBuilder().maximumSize(1000). // TODO read from builder
+                expireAfterAccess(sessionReadTimeout, TimeUnit.MILLISECONDS).removalListener(new SessionRemovalListener()).build(new SessionCacheLoader());
+                
         final Bootstrap b = new Bootstrap();
         b.group(this.receiverGroup).channel(NioDatagramChannel.class).option(ChannelOption.SO_REUSEADDR, Boolean.TRUE).option(ChannelOption.SO_RCVBUF, Integer.valueOf(this.recvBuffer))
                 .option(ChannelOption.SO_SNDBUF, Integer.valueOf(this.sendBuffer)).option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(this.recvBuffer))
@@ -301,7 +319,7 @@ public class RaknetServer
             
             for (final RaknetServerListener listener : RaknetServer.this.serverListeners)
             {
-                final ChannelHandler[] handlers = listener.getHandlerPipeline();
+                final ChannelHandler[] handlers = listener.getHandlerPipeline(RaknetServer.this);
                 if (handlers != null)
                 {
                     for (final ChannelHandler handler : handlers)
@@ -316,11 +334,97 @@ public class RaknetServer
     
     /**
      * Returns the racnet time in milliseconds.
+     * 
      * @return racnet time in milliseconds
      */
     public long getRaknetTime()
     {
         return ManagementFactory.getRuntimeMXBean().getUptime() - this.startupTime;
+    }
+    
+    /**
+     * Helper class to watch for network timeouts/ inactive sessions
+     */
+    private final class SessionRemovalListener implements RemovalListener<InetSocketCon, RaknetSession>
+    {
+        
+        /**
+         * 
+         */
+        public SessionRemovalListener()
+        {
+            // empty
+        }
+
+        @Override
+        public void onRemoval(RemovalNotification<InetSocketCon, RaknetSession> notification)
+        {
+            for (final RaknetServerListener listener : RaknetServer.this.serverListeners)
+            {
+                listener.onRemoval(notification.getValue());
+            }
+        }
+        
+    }
+    
+    /**
+     * Gets the session for associated connection; creates it if needed.
+     * @param from sender address
+     * @param to receiver address
+     * @return raknet session or {@code null} if the address is blacklisted
+     * @throws IllegalStateException thrown if there was a problem accessing the cache
+     */
+    public RaknetSession getOrCreateSession(final InetSocketAddress from, final InetSocketAddress to)
+    {
+        try
+        {
+            return this.sessions.get(new InetSocketCon(from, to));
+        }
+        catch (ExecutionException ex)
+        {
+            throw new IllegalStateException(ex);
+        }
+    }
+    
+    /**
+     * Gets the session for associated connection
+     * @param from sender address
+     * @param to receiver address
+     * @return raknet session or {@code null} if it was not found
+     */
+    public RaknetSession getSessionIfPresent(final InetSocketAddress from, final InetSocketAddress to)
+    {
+        return this.sessions.getIfPresent(new InetSocketCon(from, to));
+    }
+    
+    /**
+     * Helper class to build new sessions on demand
+     */
+    private final class SessionCacheLoader extends CacheLoader<InetSocketCon, RaknetSession>
+    {
+        
+        /**
+         * 
+         */
+        public SessionCacheLoader()
+        {
+            // empty
+        }
+
+        @Override
+        public RaknetSession load(InetSocketCon key) throws Exception
+        {
+            final RaknetSession session = new RaknetSessionImpl(key);
+            for (final RaknetServerListener listener : RaknetServer.this.serverListeners)
+            {
+                if (!listener.onNewSession(session))
+                {
+                    return null;
+                }
+            }
+            return session;
+        }
+        
     }
     
 }

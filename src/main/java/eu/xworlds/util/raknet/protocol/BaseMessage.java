@@ -78,6 +78,34 @@ public abstract class BaseMessage implements RaknetMessage
     }
     
     /**
+     * writes an unsigned int to byte buf
+     * 
+     * @param target target byte buffer.
+     * @param value the unsigned short value.
+     */
+    protected void writeUnsignedInt(ByteBuf target, long value)
+    {
+        if (value < 0 || value > 0xffffffl)
+        {
+            throw new IllegalArgumentException(value + " exceeds allowed size"); //$NON-NLS-1$
+        }
+        if (target.order() == ByteOrder.BIG_ENDIAN)
+        {
+            target.writeByte((int) value >> 32);
+            target.writeByte((int) value >> 16);
+            target.writeByte((int) value >> 8);
+            target.writeByte((int) value);
+        }
+        else
+        {
+            target.writeByte((int) value);
+            target.writeByte((int) value >> 8);
+            target.writeByte((int) value >> 16);
+            target.writeByte((int) value >> 32);
+        }
+    }
+    
+    /**
      * writes an unsigned medium to byte buf
      * 
      * @param target target byte buffer.

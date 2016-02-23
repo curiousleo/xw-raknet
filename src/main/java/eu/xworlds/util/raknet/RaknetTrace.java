@@ -17,26 +17,47 @@
  */
 package eu.xworlds.util.raknet;
 
+import java.util.logging.Level;
+
+import eu.xworlds.util.raknet.protocol.InvalidRaknetMessage;
+import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
 /**
- * Pipeline for incoming server connections.
+ * Pipeline to log every incoming data package
  * 
  * @author mepeisen
  */
-class RaknetTrace
+class RaknetTrace extends SimpleChannelInboundHandler<RaknetMessage>
 {
-    
-    /** the raknet server listeners. */
-    private RaknetServerListener[] listeners;
-    
-    /**
-     * The handler for incoming connections.
-     * 
-     * @param serverListeners
-     *            the server listeners.
-     */
-    public RaknetTrace(RaknetServerListener[] serverListeners)
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, RaknetMessage msg) throws Exception
     {
-        this.listeners = serverListeners;
+        if (msg instanceof InvalidRaknetMessage)
+        {
+            final InvalidRaknetMessage inv = (InvalidRaknetMessage) msg;
+            if (inv.getEx() == null)
+            {
+                RaknetServer.LOGGER.finest("invalid/unknown raknet code from from " + inv.getSender() + " to " + inv.getReceiver() + ": " + msg);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$                
+            }
+            else
+            {
+                RaknetServer.LOGGER.log(Level.FINEST, "exception analyzing raknet message from " + inv.getSender() + " to " + inv.getReceiver() + ": " + msg, inv.getEx());   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+            }
+        }
+        else if (msg instanceof TargetedMessage)
+        {
+            final TargetedMessage tmsg = (TargetedMessage) msg;
+            RaknetServer.LOGGER.finest("incoming data from " + tmsg.getSender() + " to " + tmsg.getReceiver() + ": " + msg);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+        }
+        else
+        {
+            RaknetServer.LOGGER.finest("Incoming data package " + msg); //$NON-NLS-1$
+        }
+        ctx.fireChannelRead(msg);
     }
     
 }
