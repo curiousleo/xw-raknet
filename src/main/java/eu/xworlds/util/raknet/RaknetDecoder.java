@@ -25,8 +25,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
+import eu.xworlds.util.raknet.protocol.ConnectedPing;
+import eu.xworlds.util.raknet.protocol.ConnectedPong;
+import eu.xworlds.util.raknet.protocol.ConnectionRequest;
+import eu.xworlds.util.raknet.protocol.DetectLostConnections;
 import eu.xworlds.util.raknet.protocol.InvalidRaknetMessage;
+import eu.xworlds.util.raknet.protocol.OpenConnectionReply1;
+import eu.xworlds.util.raknet.protocol.OpenConnectionReply2;
+import eu.xworlds.util.raknet.protocol.OpenConnectionRequest1;
+import eu.xworlds.util.raknet.protocol.OpenConnectionRequest2;
+import eu.xworlds.util.raknet.protocol.OurSystemRequiresSecurity;
+import eu.xworlds.util.raknet.protocol.OutOfBandInternal;
+import eu.xworlds.util.raknet.protocol.PublicKeyMismatch;
 import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import eu.xworlds.util.raknet.protocol.RemoteSystemRequiresPublicKey;
+import eu.xworlds.util.raknet.protocol.SndReceiptAcked;
+import eu.xworlds.util.raknet.protocol.SndReceiptLoss;
+import eu.xworlds.util.raknet.protocol.UnconnectedPing;
+import eu.xworlds.util.raknet.protocol.UnconnectedPingOpenConnections;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
@@ -120,7 +136,22 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
     private Map<Byte, Class<? extends RaknetMessage>> getDefaultMessages()
     {
         final Map<Byte, Class<? extends RaknetMessage>> result = new HashMap<>();
-        // TODO
+        result.put(Byte.valueOf(ConnectedPing.ID), ConnectedPing.class);
+        result.put(Byte.valueOf(ConnectedPong.ID), ConnectedPong.class);
+        result.put(Byte.valueOf(ConnectionRequest.ID), ConnectionRequest.class);
+        result.put(Byte.valueOf(DetectLostConnections.ID), DetectLostConnections.class);
+        result.put(Byte.valueOf(OpenConnectionReply1.ID), OpenConnectionReply1.class);
+        result.put(Byte.valueOf(OpenConnectionReply2.ID), OpenConnectionReply2.class);
+        result.put(Byte.valueOf(OpenConnectionRequest1.ID), OpenConnectionRequest1.class);
+        result.put(Byte.valueOf(OpenConnectionRequest2.ID), OpenConnectionRequest2.class);
+        result.put(Byte.valueOf(OurSystemRequiresSecurity.ID), OurSystemRequiresSecurity.class);
+        result.put(Byte.valueOf(OutOfBandInternal.ID), OutOfBandInternal.class);
+        result.put(Byte.valueOf(PublicKeyMismatch.ID), PublicKeyMismatch.class);
+        result.put(Byte.valueOf(RemoteSystemRequiresPublicKey.ID), RemoteSystemRequiresPublicKey.class);
+        result.put(Byte.valueOf(SndReceiptAcked.ID), SndReceiptAcked.class);
+        result.put(Byte.valueOf(SndReceiptLoss.ID), SndReceiptLoss.class);
+        result.put(Byte.valueOf(UnconnectedPing.ID), SndReceiptAcked.class);
+        result.put(Byte.valueOf(UnconnectedPingOpenConnections.ID), UnconnectedPingOpenConnections.class);
         return result;
     }
     
