@@ -69,10 +69,10 @@ public class RaknetServer
     /** the logger instance */
     static final Logger                                      LOGGER            = Logger.getLogger(RaknetServer.class.getName());
     
-//    /**
-//     * The addresses to bind to.
-//     */
-//    private InetSocketAddress[]                              addresses;
+    // /**
+    // * The addresses to bind to.
+    // */
+    // private InetSocketAddress[] addresses;
     
     /**
      * The server listeners.
@@ -133,6 +133,21 @@ public class RaknetServer
     private final LoadingCache<InetSocketCon, RaknetSession> sessions;
     
     /**
+     * The factories to create netty channel handlers
+     */
+    final RaknetPipelineFactory[]                            pipelineFactories;
+    
+    /**
+     * the factories to register additional raknet message handlers
+     */
+    final RaknetHandlerFactory[]                             handlerFactories;
+    
+    /**
+     * the factories to register additional raknet message classes
+     */
+    final RaknetMessageFactory[]                             messageFactories;
+    
+    /**
      * Hidden constructor.
      * 
      * @param addresses
@@ -149,15 +164,26 @@ public class RaknetServer
      *            the receiver nio group.
      * @param sessionReadTimeout
      *            the raknet session read timeout in milliseconds
+     * @param pFactories
+     *            the factories to create additional raknet pipeline handlers
+     * @param hFactories
+     *            the factories to register additional raknet message handlers
+     * @param mFactories
+     *            the factories to register additional raknet message classes
      */
-    RaknetServer(InetSocketAddress[] addresses, RaknetServerListener[] serverListeners, int recvBuffer, int sendBuffer, NioEventLoopGroup sGroup, NioEventLoopGroup rGroup, int sessionReadTimeout)
+    RaknetServer(InetSocketAddress[] addresses, RaknetServerListener[] serverListeners, int recvBuffer, int sendBuffer, NioEventLoopGroup sGroup, NioEventLoopGroup rGroup, int sessionReadTimeout,
+            RaknetPipelineFactory[] pFactories, RaknetMessageFactory[] mFactories, RaknetHandlerFactory[] hFactories)
     {
-//        this.addresses = addresses;
+        // this.addresses = addresses;
         this.serverListeners = serverListeners;
         this.recvBuffer = recvBuffer;
         this.sendBuffer = sendBuffer;
         this.senderGroup = sGroup;
         this.receiverGroup = rGroup;
+        
+        this.pipelineFactories = pFactories;
+        this.handlerFactories = hFactories;
+        this.messageFactories = mFactories;
         
         this.sessions = CacheBuilder.newBuilder().maximumSize(1000). // TODO read from builder
                 expireAfterAccess(sessionReadTimeout, TimeUnit.MILLISECONDS).removalListener(new SessionRemovalListener()).build(new SessionCacheLoader());
@@ -310,16 +336,16 @@ public class RaknetServer
         {
             final ChannelPipeline p = ch.pipeline();
             p.addLast(new ConnectionHandler(RaknetServer.this.serverListeners));
-            p.addLast(new RaknetDecoder(RaknetServer.this.serverListeners));
+            p.addLast(new RaknetDecoder(RaknetServer.this.messageFactories));
             if (RaknetServer.this.isTracing)
             {
                 p.addLast(new RaknetTrace());
             }
-            p.addLast(new RaknetHandler(RaknetServer.this, RaknetServer.this.serverListeners));
+            p.addLast(new RaknetHandler(RaknetServer.this, RaknetServer.this.handlerFactories));
             
-            for (final RaknetServerListener listener : RaknetServer.this.serverListeners)
+            for (final RaknetPipelineFactory factory : RaknetServer.this.pipelineFactories)
             {
-                final ChannelHandler[] handlers = listener.getHandlerPipeline(RaknetServer.this);
+                final ChannelHandler[] handlers = factory.getHandlerPipeline(RaknetServer.this);
                 if (handlers != null)
                 {
                     for (final ChannelHandler handler : handlers)
@@ -355,7 +381,7 @@ public class RaknetServer
         {
             // empty
         }
-
+        
         @Override
         public void onRemoval(RemovalNotification<InetSocketCon, RaknetSession> notification)
         {
@@ -369,10 +395,14 @@ public class RaknetServer
     
     /**
      * Gets the session for associated connection; creates it if needed.
-     * @param from sender address
-     * @param to receiver address
+     * 
+     * @param from
+     *            sender address
+     * @param to
+     *            receiver address
      * @return raknet session or {@code null} if the address is blacklisted
-     * @throws IllegalStateException thrown if there was a problem accessing the cache
+     * @throws IllegalStateException
+     *             thrown if there was a problem accessing the cache
      */
     public RaknetSession getOrCreateSession(final InetSocketAddress from, final InetSocketAddress to)
     {
@@ -388,8 +418,11 @@ public class RaknetServer
     
     /**
      * Gets the session for associated connection
-     * @param from sender address
-     * @param to receiver address
+     * 
+     * @param from
+     *            sender address
+     * @param to
+     *            receiver address
      * @return raknet session or {@code null} if it was not found
      */
     public RaknetSession getSessionIfPresent(final InetSocketAddress from, final InetSocketAddress to)
@@ -410,7 +443,7 @@ public class RaknetServer
         {
             // empty
         }
-
+        
         @Override
         public RaknetSession load(InetSocketCon key) throws Exception
         {

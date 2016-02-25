@@ -66,19 +66,19 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
     /**
      * The handler for incoming connections.
      * 
-     * @param serverListeners
-     *            the server listeners.
+     * @param messageFactories
+     *            the message factories
      */
-    public RaknetDecoder(RaknetServerListener[] serverListeners)
+    public RaknetDecoder(RaknetMessageFactory[] messageFactories)
     {
         this.registerMessages(this.getDefaultMessages());
-        for (final RaknetServerListener listener : serverListeners)
+        for (final RaknetMessageFactory factory : messageFactories)
         {
-            final Map<Byte, Class<? extends RaknetMessage>> messageClasses = listener.getMessageClasses();
+            final Map<Byte, Class<? extends RaknetMessage>> messageClasses = factory.getMessageClasses();
             this.registerMessages(messageClasses);
         }
     }
-
+    
     @Override
     protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) throws Exception
     {
@@ -108,7 +108,9 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
     
     /**
      * Register message classes.
-     * @param classMap the message classes.
+     * 
+     * @param classMap
+     *            the message classes.
      */
     private void registerMessages(Map<Byte, Class<? extends RaknetMessage>> classMap)
     {
@@ -131,6 +133,7 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
     
     /**
      * Creates the default messages
+     * 
      * @return class map for standard protocol
      */
     private Map<Byte, Class<? extends RaknetMessage>> getDefaultMessages()

@@ -44,16 +44,16 @@ class RaknetHandler extends MessageToMessageDecoder<TargetedMessage>
      * 
      * @param server
      *            the raknet server
-     * @param serverListeners
-     *            the server listeners.
+     * @param handlerFactories
+     *            the handler factories.
      */
-    public RaknetHandler(RaknetServer server, RaknetServerListener[] serverListeners)
+    public RaknetHandler(RaknetServer server, RaknetHandlerFactory[] handlerFactories)
     {
         this.server = server;
         this.handlers.putAll(this.getDefaulHandlers());
-        for (final RaknetServerListener listener : serverListeners)
+        for (final RaknetHandlerFactory factory : handlerFactories)
         {
-            final Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> messageClasses = listener.getMessageHandlers();
+            final Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> messageClasses = factory.getMessageHandlers();
             this.handlers.putAll(messageClasses);
         }
     }

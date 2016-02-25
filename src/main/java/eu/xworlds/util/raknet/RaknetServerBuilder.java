@@ -53,37 +53,52 @@ public class RaknetServerBuilder
     /**
      * The network addresses to be used.
      */
-    private final List<InetSocketAddress>    interfaces         = new ArrayList<>();
+    private final List<InetSocketAddress>     interfaces         = new ArrayList<>();
     
     /**
      * the raknet server listeners.
      */
-    private final List<RaknetServerListener> listeners          = new ArrayList<>();
+    private final List<RaknetServerListener>  listeners          = new ArrayList<>();
+    
+    /**
+     * the factories for creating additional netty channel handlers
+     */
+    private final List<RaknetPipelineFactory> pipelineFactories  = new ArrayList<>();
+    
+    /**
+     * the factories to create message handlers.
+     */
+    private final List<RaknetHandlerFactory> handlerFactories = new ArrayList<>();
+    
+    /**
+     * the factories to register raknet message classes.
+     */
+    private final List<RaknetMessageFactory> messageFactories = new ArrayList<>();
     
     /**
      * The nio sender group
      */
-    private NioEventLoopGroup                senderGroup;
+    private NioEventLoopGroup                 senderGroup;
     
     /**
      * The nio receiver group
      */
-    private NioEventLoopGroup                receiverGroup;
+    private NioEventLoopGroup                 receiverGroup;
     
     /**
      * The network recv buffer
      */
-    private int                              recvBuffer         = 52 * 1024;        // 52k = BSD 4.3 limit
+    private int                               recvBuffer         = 52 * 1024;        // 52k = BSD 4.3 limit
     
     /**
      * The network send buffer
      */
-    private int                              sendBuffer         = 52 * 1024;        // 52k = BSD 4.3 limit
+    private int                               sendBuffer         = 52 * 1024;        // 52k = BSD 4.3 limit
     
     /**
      * the session read timeout
      */
-    private int                              sessionReadTimeout = 15 * 1000;        // within at least 15 seconds there should be a ping
+    private int                               sessionReadTimeout = 15 * 1000;        // within at least 15 seconds there should be a ping
     
     /**
      * Builds the server and starts connecting/binding in background.
@@ -102,12 +117,28 @@ public class RaknetServerBuilder
         
         final InetSocketAddress[] addresses = this.interfaces.toArray(new InetSocketAddress[this.interfaces.size()]);
         final RaknetServerListener[] serverListeners = this.listeners.toArray(new RaknetServerListener[this.listeners.size()]);
+        final RaknetPipelineFactory[] pFactories = this.pipelineFactories.toArray(new RaknetPipelineFactory[this.pipelineFactories.size()]);
+        final RaknetMessageFactory[] mFactories = this.messageFactories.toArray(new RaknetMessageFactory[this.messageFactories.size()]);
+        final RaknetHandlerFactory[] hFactories = this.handlerFactories.toArray(new RaknetHandlerFactory[this.handlerFactories.size()]);
         
         final NioEventLoopGroup sGroup = this.senderGroup == null ? new NioEventLoopGroup() : this.senderGroup;
         final NioEventLoopGroup rGroup = this.receiverGroup == null ? new NioEventLoopGroup() : this.receiverGroup;
         
-        final RaknetServer result = new RaknetServer(addresses, serverListeners, this.recvBuffer, this.sendBuffer, sGroup, rGroup, this.sessionReadTimeout);
+        final RaknetServer result = new RaknetServer(addresses, serverListeners, this.recvBuffer, this.sendBuffer, sGroup, rGroup, this.sessionReadTimeout, pFactories, mFactories, hFactories);
         return result;
+    }
+    
+    /**
+     * Adds a pipeline factoy for netty pipeline (incoming traffic)
+     * 
+     * @param factory
+     *            the factory to add
+     * @return this builder
+     */
+    public RaknetServerBuilder addPipelineFactory(RaknetPipelineFactory factory)
+    {
+        this.pipelineFactories.add(factory);
+        return this;
     }
     
     /**
