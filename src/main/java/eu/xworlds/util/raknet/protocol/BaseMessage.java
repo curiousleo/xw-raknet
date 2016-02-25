@@ -170,4 +170,40 @@ public abstract class BaseMessage implements RaknetMessage
         return Hex.encodeHexString(buf);
     }
     
+    protected static final int SIZE_IPV4_ADDRESS = 4;
+    
+    protected long readIPv4Address(ByteBuf buf)
+    {
+        return buf.readUnsignedInt();
+    }
+    
+    protected void writeIpv4Address(ByteBuf target, long address)
+    {
+        writeUnsignedInt(target, address);
+    }
+    
+    protected static final int SIZE_TIME = 8;
+    
+    protected long readTime(ByteBuf buf)
+    {
+        return buf.readLong();
+    }
+    
+    protected void writeTime(ByteBuf target, long time)
+    {
+        target.writeLong(time);
+    }
+    
+    protected static final int SIZE_GUID = 8;
+    
+    protected long readGuid(ByteBuf buf)
+    {
+        return buf.readLong();
+    }
+    
+    protected void writeGuid(ByteBuf target, long time)
+    {
+        target.writeLong(time);
+    }
+    
 }

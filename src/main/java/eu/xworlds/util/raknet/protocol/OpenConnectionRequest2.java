@@ -229,7 +229,7 @@ public class OpenConnectionRequest2 extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        int size = 1 + this.magic.length + 4 + 2 + 8;
+        int size = 1 + this.magic.length + SIZE_IPV4_ADDRESS + 2 + SIZE_GUID;
         if (this.useSecurity)
         {
             size += 4 + 1;
@@ -251,9 +251,9 @@ public class OpenConnectionRequest2 extends TargetedMessage
                 buf.writeBytes(this.clientChallenge);
             }
         }
-        writeUnsignedInt(buf, this.bindingAddress);
+        writeIpv4Address(buf, this.bindingAddress);
         writeUnsignedShort(buf, this.mtuSize);
-        buf.writeLong(this.guid);
+        writeGuid(buf, this.guid);
         return buf;
     }
     
@@ -273,9 +273,9 @@ public class OpenConnectionRequest2 extends TargetedMessage
                 buf.readBytes(this.clientChallenge);
             }
         }
-        this.bindingAddress = buf.readUnsignedInt();
+        this.bindingAddress = readIPv4Address(buf);
         this.mtuSize = buf.readUnsignedShort();
-        this.guid = buf.readLong();
+        this.guid = readGuid(buf);
     }
 
     @Override

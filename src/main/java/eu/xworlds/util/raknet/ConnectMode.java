@@ -17,37 +17,29 @@
  */
 package eu.xworlds.util.raknet;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
-
 /**
+ * The connection mode.
+ * 
  * @author mepeisen
- *
  */
-public interface RaknetSession
+public enum ConnectMode
 {
-
-    /**
-     * Sends given message to client.
-     * @param msg message
-     */
-    void send(RaknetMessage msg);
-
-    /**
-     * Returns the ping support for raknet sessions.
-     * @return raknet session pings
-     */
-    RaknetSessionPings getPings();
     
-    /**
-     * Returns current connection state
-     * @return connection state.
-     */
-    ConnectionState getConnectionState();
-    
-    /**
-     * Returns the current connect mode
-     * @return connect mode.
-     */
-    ConnectMode getConnectMode();
+    /** default (not connected) */
+    NO_ACTION,
+    /** disconnecting mode */
+    DISCONNECT_ASAP,
+    /** disconnecting mode */
+    DISCONNECT_ASAP_SILENTLY,
+    /** disconnecting */
+    DISCONNECT_ON_NO_ACK,
+    /** connecting */
+    REQUESTED_CONNECTION,
+    /** connecting */
+    HANDLING_CONNECTION_REQUEST,
+    /** the sender is unverified */
+    UNVERIFIED_SENDER,
+    /** connected */
+    CONNECTED
     
 }

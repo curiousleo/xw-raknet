@@ -15,39 +15,26 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
-package eu.xworlds.util.raknet;
+package eu.xworlds.util.raknet.handler;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import java.util.Collection;
+
+import eu.xworlds.util.raknet.RaknetMessageHandler;
+import eu.xworlds.util.raknet.RaknetSession;
+import eu.xworlds.util.raknet.protocol.ConnectedPong;
 
 /**
+ * Handles incoming pong.
+ * 
  * @author mepeisen
- *
  */
-public interface RaknetSession
+public class ConnectedPongHandler implements RaknetMessageHandler<ConnectedPong>
 {
 
-    /**
-     * Sends given message to client.
-     * @param msg message
-     */
-    void send(RaknetMessage msg);
-
-    /**
-     * Returns the ping support for raknet sessions.
-     * @return raknet session pings
-     */
-    RaknetSessionPings getPings();
-    
-    /**
-     * Returns current connection state
-     * @return connection state.
-     */
-    ConnectionState getConnectionState();
-    
-    /**
-     * Returns the current connect mode
-     * @return connect mode.
-     */
-    ConnectMode getConnectMode();
+    @Override
+    public void handle(ConnectedPong message, RaknetSession session, Collection<Object> out)
+    {
+        session.getPings().registerAnswer(message.getPingTime(), message.getPongTime());
+    }
     
 }

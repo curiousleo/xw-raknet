@@ -128,7 +128,7 @@ public class OutOfBandInternal extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        int size = 1 + 8 + this.magic.length;
+        int size = 1 + SIZE_GUID + this.magic.length;
         if (this.oobData != null)
         {
             size += this.oobData.length;
@@ -136,7 +136,7 @@ public class OutOfBandInternal extends TargetedMessage
         final ByteBuf buf = Unpooled.buffer(size);
         buf.order(ByteOrder.BIG_ENDIAN);
         buf.writeByte(ID);
-        buf.writeLong(this.guid);
+        writeGuid(buf, this.guid);
         buf.writeBytes(this.magic);
         if (this.oobData != null)
         {
@@ -148,7 +148,7 @@ public class OutOfBandInternal extends TargetedMessage
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.guid = buf.readLong();
+        this.guid = readGuid(buf);
         this.magic = new byte[MAGIC_BYTES];
         buf.readBytes(this.magic);
         if (buf.readableBytes() > 0)

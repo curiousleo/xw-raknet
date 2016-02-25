@@ -77,10 +77,10 @@ public class UnconnectedPingOpenConnections extends TargetedMessage
     public ByteBuf encode()
     {
 
-        final ByteBuf result = Unpooled.buffer(1 + 8 + this.magic.length);
+        final ByteBuf result = Unpooled.buffer(1 + SIZE_TIME + this.magic.length);
         result.order(ByteOrder.BIG_ENDIAN);
         result.writeByte(ID);
-        result.writeLong(this.time);
+        writeTime(result, this.time);
         result.writeBytes(this.magic);
         return result;
     }
@@ -88,7 +88,7 @@ public class UnconnectedPingOpenConnections extends TargetedMessage
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.time = buf.readLong();
+        this.time = readTime(buf);
         this.magic = new byte[MAGIC_BYTES];
         buf.readBytes(this.magic.length);
     }

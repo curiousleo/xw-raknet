@@ -108,19 +108,19 @@ public class ConnectedPong extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        final ByteBuf result = Unpooled.buffer(1 + 8 + 8);
+        final ByteBuf result = Unpooled.buffer(1 + SIZE_TIME + SIZE_TIME);
         result.order(ByteOrder.BIG_ENDIAN);
         result.writeByte(ID);
-        result.writeLong(this.pingTime);
-        result.writeLong(this.pongTime);
+        writeTime(result, this.pingTime);
+        writeTime(result, this.pongTime);
         return result;
     }
     
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.pingTime = buf.readLong();
-        this.pongTime = buf.readLong();
+        this.pingTime = readTime(buf);
+        this.pongTime = readTime(buf);
     }
 
     @Override

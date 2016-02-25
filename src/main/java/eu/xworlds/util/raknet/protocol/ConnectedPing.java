@@ -89,17 +89,17 @@ public class ConnectedPing extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        final ByteBuf result = Unpooled.buffer(1 + 8);
+        final ByteBuf result = Unpooled.buffer(1 + SIZE_TIME);
         result.order(ByteOrder.BIG_ENDIAN);
         result.writeByte(ID);
-        result.writeLong(this.time);
+        writeTime(result, this.time);
         return result;
     }
     
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.time = buf.readLong();
+        this.time = readTime(buf);
     }
 
     @Override

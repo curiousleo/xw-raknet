@@ -315,7 +315,7 @@ public class RaknetServer
             {
                 p.addLast(new RaknetTrace());
             }
-            p.addLast(new RaknetHandler(RaknetServer.this.serverListeners));
+            p.addLast(new RaknetHandler(RaknetServer.this, RaknetServer.this.serverListeners));
             
             for (final RaknetServerListener listener : RaknetServer.this.serverListeners)
             {

@@ -17,37 +17,25 @@
  */
 package eu.xworlds.util.raknet;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
-
 /**
+ * Connection attempt result.
+ * 
  * @author mepeisen
- *
  */
-public interface RaknetSession
+public enum ConnectionAttemptResult
 {
-
-    /**
-     * Sends given message to client.
-     * @param msg message
-     */
-    void send(RaknetMessage msg);
-
-    /**
-     * Returns the ping support for raknet sessions.
-     * @return raknet session pings
-     */
-    RaknetSessionPings getPings();
     
-    /**
-     * Returns current connection state
-     * @return connection state.
-     */
-    ConnectionState getConnectionState();
-    
-    /**
-     * Returns the current connect mode
-     * @return connect mode.
-     */
-    ConnectMode getConnectMode();
+    /** */
+    CONNECTION_ATTEMPT_STARTED,
+    /** */
+    INVALID_PARAMETER,
+    /** */
+    CANNOT_RESOLVE_DOMAIN_NAME,
+    /** */
+    ALREADY_CONNECTED_TO_ENDPOINT,
+    /** */
+    CONNECTION_ATTEMPT_ALREADY_IN_PROGRESS,
+    /** */
+    SECURITY_INITIALIZATION_FAILED
     
 }

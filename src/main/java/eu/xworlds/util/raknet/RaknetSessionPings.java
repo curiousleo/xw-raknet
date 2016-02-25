@@ -17,37 +17,27 @@
  */
 package eu.xworlds.util.raknet;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
-
 /**
+ * Ping support for raknet sessions.
+ * 
  * @author mepeisen
- *
  */
-public interface RaknetSession
+public interface RaknetSessionPings
 {
-
-    /**
-     * Sends given message to client.
-     * @param msg message
-     */
-    void send(RaknetMessage msg);
-
-    /**
-     * Returns the ping support for raknet sessions.
-     * @return raknet session pings
-     */
-    RaknetSessionPings getPings();
     
     /**
-     * Returns current connection state
-     * @return connection state.
+     * Performs a ping with given timestamp
+     * @param pingTime the ping timestamp
      */
-    ConnectionState getConnectionState();
-    
+    void ping(long pingTime);
+
     /**
-     * Returns the current connect mode
-     * @return connect mode.
+     * Registers a pong for a previous ping.
+     * @param pingTime the ping timestamp
+     * @param pongTime the pong timestamp
      */
-    ConnectMode getConnectMode();
+    void registerAnswer(long pingTime, long pongTime);
+    
+    
     
 }

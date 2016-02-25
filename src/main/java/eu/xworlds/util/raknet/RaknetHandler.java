@@ -36,14 +36,20 @@ class RaknetHandler extends MessageToMessageDecoder<TargetedMessage>
     /** the well known raknet message handler */
     private final Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> handlers = new HashMap<>();
     
+    /** the raknet server */
+    private final RaknetServer                                                                           server;
+    
     /**
      * The handler for incoming connections.
      * 
+     * @param server
+     *            the raknet server
      * @param serverListeners
      *            the server listeners.
      */
-    public RaknetHandler(RaknetServerListener[] serverListeners)
+    public RaknetHandler(RaknetServer server, RaknetServerListener[] serverListeners)
     {
+        this.server = server;
         this.handlers.putAll(this.getDefaulHandlers());
         for (final RaknetServerListener listener : serverListeners)
         {
@@ -54,6 +60,7 @@ class RaknetHandler extends MessageToMessageDecoder<TargetedMessage>
     
     /**
      * Returns the default message handlers.
+     * 
      * @return map with default message handlers for managing the protocol.
      */
     private Map<Class<? extends TargetedMessage>, RaknetMessageHandler<? extends TargetedMessage>> getDefaulHandlers()
@@ -62,12 +69,36 @@ class RaknetHandler extends MessageToMessageDecoder<TargetedMessage>
         // TODO Auto-generated method stub
         return result;
     }
-
+    
     @Override
     protected void decode(ChannelHandlerContext ctx, TargetedMessage msg, List<Object> out) throws Exception
     {
-        // TODO Auto-generated method stub
-        
+        final RaknetMessageHandler<? extends TargetedMessage> handler = this.handlers.get(msg.getClass());
+        if (handler == null)
+        {
+            // re-add message
+            out.add(msg);
+        }
+        else
+        {
+            // handle message
+            this.decode(handler, msg, out);
+        }
+    }
+    
+    /**
+     * @param handler
+     *            the handler
+     * @param msg
+     *            the incoming message
+     * @param out
+     *            the outgoing message
+     */
+    @SuppressWarnings("unchecked")
+    private <T extends TargetedMessage> void decode(RaknetMessageHandler<T> handler, TargetedMessage msg, List<Object> out)
+    {
+        final RaknetSession session = this.server.getOrCreateSession(msg.getSender(), msg.getReceiver());
+        handler.handle((T) msg, session, out);
     }
     
 }

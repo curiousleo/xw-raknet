@@ -198,7 +198,7 @@ public class ConnectionRequest extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        int size = 1 + 8 + 8 + 1;
+        int size = 1 + SIZE_GUID + SIZE_TIME + 1;
         if (this.doSecurity)
         {
             size += 32 + 1;
@@ -210,8 +210,8 @@ public class ConnectionRequest extends TargetedMessage
         final ByteBuf buf = Unpooled.buffer(size);
         buf.order(ByteOrder.BIG_ENDIAN);
         buf.writeByte(ID);
-        buf.writeLong(this.clientGuid);
-        buf.writeLong(this.time);
+        writeGuid(buf, this.clientGuid);
+        writeTime(buf, this.time);
         buf.writeBoolean(this.doSecurity);
         if (this.doSecurity)
         {
@@ -228,8 +228,8 @@ public class ConnectionRequest extends TargetedMessage
     @Override
     protected void parseMessage(ByteBuf buf)
     {
-        this.clientGuid = buf.readLong();
-        this.time = buf.readLong();
+        this.clientGuid = readGuid(buf);
+        this.time = readTime(buf);
         this.doSecurity = buf.readBoolean();
         if (this.doSecurity)
         {

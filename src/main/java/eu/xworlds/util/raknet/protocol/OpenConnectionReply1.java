@@ -186,7 +186,7 @@ public class OpenConnectionReply1 extends TargetedMessage
     @Override
     public ByteBuf encode()
     {
-        int size = 1 + this.magic.length + 8 + 1 + 2;
+        int size = 1 + this.magic.length + SIZE_GUID + 1 + 2;
         if (this.hasSecurity)
         {
             size += 4 + this.publicKey.length;
@@ -195,7 +195,7 @@ public class OpenConnectionReply1 extends TargetedMessage
         result.order(ByteOrder.BIG_ENDIAN);
         result.writeByte(ID);
         result.writeBytes(this.magic);
-        result.writeLong(this.serverGuid);
+        writeGuid(result, this.serverGuid);
         result.writeBoolean(this.hasSecurity);
         if (this.hasSecurity)
         {
@@ -211,7 +211,7 @@ public class OpenConnectionReply1 extends TargetedMessage
     {
         this.magic = new byte[MAGIC_BYTES];
         buf.readBytes(this.magic);
-        this.serverGuid = buf.readLong();
+        this.serverGuid = readGuid(buf);
         this.hasSecurity = buf.readBoolean();
         if (this.hasSecurity)
         {
