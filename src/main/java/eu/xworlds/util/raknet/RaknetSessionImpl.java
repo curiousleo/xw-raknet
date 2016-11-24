@@ -17,6 +17,8 @@
  */
 package eu.xworlds.util.raknet;
 
+import eu.xworlds.util.raknet.protocol.RaknetMessage;
+
 /**
  * @author mepeisen
  *
@@ -24,12 +26,33 @@ package eu.xworlds.util.raknet;
 class RaknetSessionImpl implements RaknetSession
 {
 
-    /**
-     * @param key
-     */
     public RaknetSessionImpl(InetSocketCon key)
     {
-        // TODO Auto-generated constructor stub
+        // TODO
+        throw new UnsupportedOperationException("new");
     }
-    
+
+    @Override
+    public void send(RaknetMessage msg) {
+        // TODO
+        throw new UnsupportedOperationException("send");
+    }
+
+    @Override
+    public RaknetSessionPings getPings() {
+        // TODO
+        throw new UnsupportedOperationException("getPings");
+    }
+
+    @Override
+    public ConnectionState getConnectionState() {
+        // TODO
+        throw new UnsupportedOperationException("getConnectionState");
+    }
+
+    @Override
+    public ConnectMode getConnectMode() {
+        // TODO
+        throw new UnsupportedOperationException("getConnectMode");
+    }
 }
