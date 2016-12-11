@@ -18,6 +18,9 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REQUEST_2;
 
 import com.google.auto.value.AutoValue;
@@ -57,7 +60,19 @@ public abstract class OpenConnectionRequest2 implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        // TODO(leo)
+        return 0;
+        // int size = MAGIC_SIZE;
+        // if (useSecurity()) {
+        //     size += INT_SIZE + BOOL_SIZE;
+        //     if (clientWroteChallenge()) {
+        //     }
+        // }
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         out.writeBytes(magic());
         if (useSecurity()) {
             out.writeInt(cookie());
@@ -71,7 +86,7 @@ public abstract class OpenConnectionRequest2 implements RaknetMessage {
         ByteBufHelper.writeGuid(out, guid());
     }
 
-    public static OpenConnectionRequest2 decodeInner(ByteBuf in) {
+    public static OpenConnectionRequest2 decodeBody(ByteBuf in) {
         throw new UnsupportedOperationException("todo");
     }
 }

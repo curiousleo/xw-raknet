@@ -18,6 +18,8 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.UNCONNECTED_PING_OPEN_CONNECTIONS;
 
 import com.google.auto.value.AutoValue;
@@ -44,7 +46,12 @@ public abstract class UnconnectedPingOpenConnections implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        return TIME_SIZE + MAGIC_SIZE;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeTime(out, time());
         out.writeBytes(magic());
     }
@@ -54,9 +61,9 @@ public abstract class UnconnectedPingOpenConnections implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static UnconnectedPingOpenConnections decodeInner(ByteBuf in) {
+    public static UnconnectedPingOpenConnections decodeBody(ByteBuf in) {
         long time = ByteBufHelper.readTime(in);
-        byte[] magic = new byte[16];
+        byte[] magic = new byte[Constants.MAGIC_SIZE];
         in.readBytes(magic);
         return new AutoValue_UnconnectedPingOpenConnections(time, magic);
     }

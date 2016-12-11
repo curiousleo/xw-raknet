@@ -18,6 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.SND_RECEIPT_ACKED;
 
 import com.google.auto.value.AutoValue;
@@ -47,11 +48,16 @@ public abstract class SndReceiptAcked implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeUnsignedInt(out, serial());
     }
 
-    public static SndReceiptAcked decodeInner(ByteBuf in) {
+    @Override
+    public int size() {
+        return INT_SIZE;
+    }
+
+    public static SndReceiptAcked decodeBody(ByteBuf in) {
         return new AutoValue_SndReceiptAcked(in.readUnsignedInt());
     }
 }

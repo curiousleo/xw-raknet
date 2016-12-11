@@ -18,6 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.CONNECTED_PING;
 
 import com.google.auto.value.AutoValue;
@@ -40,11 +41,16 @@ public abstract class ConnectedPing implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        return TIME_SIZE;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeTime(out, time());
     }
 
-    public static ConnectedPing decodeInner(ByteBuf in) {
+    public static ConnectedPing decodeBody(ByteBuf in) {
         return new AutoValue_ConnectedPing(ByteBufHelper.readTime(in));
     }
 }

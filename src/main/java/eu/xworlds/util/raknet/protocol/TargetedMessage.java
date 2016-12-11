@@ -41,7 +41,11 @@ public abstract class TargetedMessage<T extends RaknetMessage> {
     public final void encode(ByteBuf out) {
         out.order(ByteOrder.BIG_ENDIAN);
         out.writeByte(inner().id());
-        inner().encodeInner(out);
+        inner().encodeBody(out);
+    }
+
+    public final int size() {
+        return inner().size() + 1;
     }
 
     public static <T extends RaknetMessage> TargetedMessage create(InetSocketAddress sender,

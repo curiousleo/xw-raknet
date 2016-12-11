@@ -38,7 +38,7 @@ public class PublicKeyMismatch implements RaknetMessage {
         return (byte) PUBLIC_KEY_MISMATCH.ordinal();
     }
 
-    public static PublicKeyMismatch decodeInner(ByteBuf in) {
+    public static PublicKeyMismatch decodeBody(ByteBuf in) {
         return INSTANCE;
     }
 }

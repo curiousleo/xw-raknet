@@ -18,6 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.BYTE_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY;
 
 import com.google.auto.value.AutoValue;
@@ -46,11 +47,16 @@ public abstract class RemoteSystemRequiresPublicKey implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        return BYTE_SIZE;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         out.writeByte(error().ordinal());
     }
 
-    public static RemoteSystemRequiresPublicKey decodeInner(ByteBuf in) {
+    public static RemoteSystemRequiresPublicKey decodeBody(ByteBuf in) {
         ErrorType error = ErrorType.values()[in.readByte()];
         return new AutoValue_RemoteSystemRequiresPublicKey(error);
     }

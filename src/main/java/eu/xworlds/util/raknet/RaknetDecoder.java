@@ -15,33 +15,36 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import eu.xworlds.util.raknet.protocol.InvalidRaknetMessage;
+import eu.xworlds.util.raknet.protocol.RaknetMessageType;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.codec.MessageToMessageDecoder;
 
+import java.nio.ByteOrder;
 import java.util.List;
 
 /**
- * Pipeline for incoming server connections.
- * 
- * <p>
- * This handler translates incoming datagram packages to RaknetMessage objects.
- * </p>
- * 
- * @author mepeisen
+ * Decodes incoming datagram packets into Raknet messages.
  */
-class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket>
-{
+class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket> {
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out) throws Exception
-    {
+    protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out)
+            throws Exception {
         final ByteBuf buf = msg.content();
-        out.add(RaknetMessage.decode(buf));
-    }
+        buf.order(ByteOrder.BIG_ENDIAN);
+        final byte id = buf.readByte();
 
+        final RaknetMessageType messageType = RaknetMessageType.of(id);
+        if (messageType == null) {
+            out.add(InvalidRaknetMessage.create(id, buf));
+            return;
+        }
+        out.add(messageType.decodeBody(buf));
+    }
 }

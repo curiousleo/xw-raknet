@@ -23,6 +23,10 @@ import io.netty.buffer.ByteBuf;
 
 @AutoValue
 public abstract class InvalidRaknetMessage implements RaknetMessage {
+
+    // TODO(leo): make this configurable
+    private static final int MAX_INVALID_BYTES = 1500;
+
     @SuppressWarnings("mutable")
     public abstract byte[] payload();
 
@@ -30,7 +34,12 @@ public abstract class InvalidRaknetMessage implements RaknetMessage {
     public abstract byte id();
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        throw new UnsupportedOperationException("Don't know size of invalid message");
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         throw new UnsupportedOperationException("Cannot encode invalid message");
     }
 
@@ -41,7 +50,7 @@ public abstract class InvalidRaknetMessage implements RaknetMessage {
      * @param in the Raknet message (without leading byte)
      */
     public static InvalidRaknetMessage create(byte id, ByteBuf in) {
-        int size = Math.min(1500, in.readableBytes());
+        int size = Math.min(MAX_INVALID_BYTES, in.readableBytes());
         byte[] payload = new byte[size];
         in.readBytes(payload);
         return new AutoValue_InvalidRaknetMessage(payload, id);

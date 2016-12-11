@@ -18,6 +18,9 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.CONNECTION_REQUEST;
 
 import com.google.auto.value.AutoValue;
@@ -32,6 +35,9 @@ import io.netty.buffer.ByteBuf;
  */
 @AutoValue
 public abstract class ConnectionRequest implements RaknetMessage {
+
+    private static final int IDENTITY_SIZE = 160;
+    private static final int PROOF_SIZE = 32;
 
     public abstract long clientGuid();
 
@@ -53,7 +59,19 @@ public abstract class ConnectionRequest implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        int size = GUID_SIZE + TIME_SIZE + BOOL_SIZE;
+        if (doSecurity()) {
+            size += PROOF_SIZE + BOOL_SIZE;
+            if (doIdentity()) {
+                size += IDENTITY_SIZE;
+            }
+        }
+        return size;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeGuid(out, clientGuid());
         ByteBufHelper.writeTime(out, time());
         out.writeBoolean(doSecurity());
@@ -71,13 +89,13 @@ public abstract class ConnectionRequest implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static ConnectionRequest decodeInner(ByteBuf in) {
+    public static ConnectionRequest decodeBody(ByteBuf in) {
         long clientGuid = ByteBufHelper.readGuid(in);
         long time = ByteBufHelper.readTime(in);
         boolean doSecurity = in.readBoolean();
-        byte[] proof = new byte[32];
+        byte[] proof = new byte[PROOF_SIZE];
         boolean doIdentity = false;
-        byte[] identity = new byte[160];
+        byte[] identity = new byte[IDENTITY_SIZE];
         if (doSecurity) {
             in.readBytes(proof);
             doIdentity = in.readBoolean();

@@ -18,6 +18,11 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.SHORT_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REPLY_1;
 
 import com.google.auto.value.AutoValue;
@@ -36,6 +41,8 @@ import io.netty.buffer.ByteBuf;
  */
 @AutoValue
 public abstract class OpenConnectionReply1 implements RaknetMessage {
+
+    private static final int PUBLIC_KEY_SIZE = 64;
 
     @SuppressWarnings("mutable")
     public abstract byte[] magic();
@@ -57,7 +64,17 @@ public abstract class OpenConnectionReply1 implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        int size = MAGIC_SIZE + GUID_SIZE + BOOL_SIZE;
+        if (hasSecurity()) {
+            size += INT_SIZE + PUBLIC_KEY_SIZE;
+        }
+        size += SHORT_SIZE;
+        return size;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         out.writeBytes(magic());
         ByteBufHelper.writeGuid(out, serverGuid());
         out.writeBoolean(hasSecurity());
@@ -73,13 +90,13 @@ public abstract class OpenConnectionReply1 implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OpenConnectionReply1 decodeInner(ByteBuf in) {
-        byte[] magic = new byte[16];
+    public static OpenConnectionReply1 decodeBody(ByteBuf in) {
+        byte[] magic = new byte[MAGIC_SIZE];
         in.readBytes(magic);
         long serverGuid = ByteBufHelper.readGuid(in);
         boolean hasSecurity = in.readBoolean();
         int cookie = 0;
-        byte[] publicKey = new byte[64];
+        byte[] publicKey = new byte[PUBLIC_KEY_SIZE];
         if (hasSecurity) {
             cookie = in.readInt();
             in.readBytes(publicKey);

@@ -18,6 +18,8 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.BYTE_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REQUEST_1;
 
 import com.google.auto.value.AutoValue;
@@ -47,7 +49,12 @@ public abstract class OpenConnectionRequest1 implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        return MAGIC_SIZE + BYTE_SIZE + mtuPayload().length;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         out.writeBytes(magic());
         out.writeByte(protocolVersion());
         out.writeBytes(mtuPayload());
@@ -58,8 +65,8 @@ public abstract class OpenConnectionRequest1 implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OpenConnectionRequest1 decodeInner(ByteBuf in) {
-        byte[] magic = new byte[16];
+    public static OpenConnectionRequest1 decodeBody(ByteBuf in) {
+        byte[] magic = new byte[MAGIC_SIZE];
         in.readBytes(magic);
         byte protocolVersion = in.readByte();
         byte[] mtuPayload = new byte[in.readableBytes()];

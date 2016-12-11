@@ -36,7 +36,7 @@ public class OurSystemRequiresSecurity implements RaknetMessage {
         return (byte) OUR_SYSTEM_REQUIRES_SECURITY.ordinal();
     }
 
-    public static OurSystemRequiresSecurity decodeInner(ByteBuf in) {
+    public static OurSystemRequiresSecurity decodeBody(ByteBuf in) {
         return INSTANCE;
     }
 }

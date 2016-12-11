@@ -18,6 +18,10 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.SHORT_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REPLY_2;
 
 import com.google.auto.value.AutoValue;
@@ -31,6 +35,8 @@ import io.netty.buffer.ByteBuf;
  */
 @AutoValue
 public abstract class OpenConnectionReply2 implements RaknetMessage {
+
+    private static final int SECURITY_ANSWER_SIZE = 128;
 
     @SuppressWarnings("mutable")
     public abstract byte[] magic();
@@ -52,7 +58,16 @@ public abstract class OpenConnectionReply2 implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        int size = MAGIC_SIZE + GUID_SIZE + SHORT_SIZE + SHORT_SIZE + BOOL_SIZE;
+        if (doSecurity()) {
+            size += SECURITY_ANSWER_SIZE;
+        }
+        return size;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         out.writeBytes(magic());
         ByteBufHelper.writeGuid(out, serverGuid());
         ByteBufHelper.writeUnsignedShort(out, port());
@@ -68,14 +83,14 @@ public abstract class OpenConnectionReply2 implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OpenConnectionReply2 decodeInner(ByteBuf in) {
-        byte[] magic = new byte[16];
+    public static OpenConnectionReply2 decodeBody(ByteBuf in) {
+        byte[] magic = new byte[MAGIC_SIZE];
         in.readBytes(magic);
         long serverGuid = ByteBufHelper.readGuid(in);
         int port = in.readUnsignedShort();
         int mtuSize = in.readUnsignedShort();
         boolean doSecurity = in.readBoolean();
-        byte[] securityAnswer = new byte[128];
+        byte[] securityAnswer = new byte[SECURITY_ANSWER_SIZE];
         if (doSecurity) {
             in.readBytes(securityAnswer);
         }

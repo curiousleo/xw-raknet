@@ -20,30 +20,16 @@ package eu.xworlds.util.raknet.protocol;
 
 import io.netty.buffer.ByteBuf;
 
-import java.nio.ByteOrder;
-import java.util.Arrays;
-import java.util.List;
-
 public interface RaknetMessage {
 
     byte id();
 
-    default void encodeInner(ByteBuf out) {
-        // do nothing
+    default int size() {
+        // empty message
+        return 0;
     }
 
-    /**
-     * Decodes {@link ByteBuf} into {@link RaknetMessage}.
-     *
-     * @param in the Raknet message
-     */
-    static RaknetMessage decode(ByteBuf in) {
-        in.order(ByteOrder.BIG_ENDIAN);
-        final byte id = in.readByte();
-        final RaknetMessageType messageType = RaknetMessageType.of(id);
-        if (messageType == null) {
-            return InvalidRaknetMessage.create(id, in);
-        }
-        return messageType.decodeInner(in);
+    default void encodeBody(ByteBuf out) {
+        // empty message
     }
 }

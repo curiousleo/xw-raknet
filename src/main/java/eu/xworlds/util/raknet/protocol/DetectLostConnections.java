@@ -39,7 +39,7 @@ public class DetectLostConnections implements RaknetMessage {
         return (byte) DETECT_LOST_CONNECTIONS.ordinal();
     }
 
-    public static DetectLostConnections decodeInner(ByteBuf in) {
+    public static DetectLostConnections decodeBody(ByteBuf in) {
         return INSTANCE;
     }
 }

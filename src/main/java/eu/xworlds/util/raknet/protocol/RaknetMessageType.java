@@ -24,24 +24,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
-enum RaknetMessageType {
+public enum RaknetMessageType {
     // See https://github.com/OculusVR/RakNet/blob/7fe6cdd0ee411a742d01cd020d4bd885f39e1cf1/Source/MessageIdentifiers.h#L51
-    CONNECTED_PING(ConnectedPing::decodeInner),
-    UNCONNECTED_PING(UnconnectedPing::decodeInner),
-    UNCONNECTED_PING_OPEN_CONNECTIONS(UnconnectedPingOpenConnections::decodeInner),
-    CONNECTED_PONG(ConnectedPong::decodeInner),
-    DETECT_LOST_CONNECTIONS(DetectLostConnections::decodeInner),
-    OPEN_CONNECTION_REQUEST_1(OpenConnectionRequest1::decodeInner),
-    OPEN_CONNECTION_REPLY_1(OpenConnectionReply1::decodeInner),
-    OPEN_CONNECTION_REQUEST_2(OpenConnectionRequest2::decodeInner),
-    OPEN_CONNECTION_REPLY_2(OpenConnectionReply2::decodeInner),
-    CONNECTION_REQUEST(ConnectionRequest::decodeInner),
-    REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY(RemoteSystemRequiresPublicKey::decodeInner),
-    OUR_SYSTEM_REQUIRES_SECURITY(OurSystemRequiresSecurity::decodeInner),
-    PUBLIC_KEY_MISMATCH(PublicKeyMismatch::decodeInner),
-    OUT_OF_BAND_INTERNAL(OutOfBandInternal::decodeInner),
-    SND_RECEIPT_ACKED(SndReceiptAcked::decodeInner),
-    SND_RECEIPT_LOSS(SndReceiptLoss::decodeInner);
+    CONNECTED_PING(ConnectedPing::decodeBody),
+    UNCONNECTED_PING(UnconnectedPing::decodeBody),
+    UNCONNECTED_PING_OPEN_CONNECTIONS(UnconnectedPingOpenConnections::decodeBody),
+    CONNECTED_PONG(ConnectedPong::decodeBody),
+    DETECT_LOST_CONNECTIONS(DetectLostConnections::decodeBody),
+    OPEN_CONNECTION_REQUEST_1(OpenConnectionRequest1::decodeBody),
+    OPEN_CONNECTION_REPLY_1(OpenConnectionReply1::decodeBody),
+    OPEN_CONNECTION_REQUEST_2(OpenConnectionRequest2::decodeBody),
+    OPEN_CONNECTION_REPLY_2(OpenConnectionReply2::decodeBody),
+    CONNECTION_REQUEST(ConnectionRequest::decodeBody),
+    REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY(RemoteSystemRequiresPublicKey::decodeBody),
+    OUR_SYSTEM_REQUIRES_SECURITY(OurSystemRequiresSecurity::decodeBody),
+    PUBLIC_KEY_MISMATCH(PublicKeyMismatch::decodeBody),
+    OUT_OF_BAND_INTERNAL(OutOfBandInternal::decodeBody),
+    SND_RECEIPT_ACKED(SndReceiptAcked::decodeBody),
+    SND_RECEIPT_LOSS(SndReceiptLoss::decodeBody);
 
     private static final List<RaknetMessageType> RAKNET_MESSAGE_TYPES =
             Arrays.asList(RaknetMessageType.values());
@@ -52,11 +52,11 @@ enum RaknetMessageType {
         this.decoder = decoder;
     }
 
-    static RaknetMessageType of(byte id) {
+    public static RaknetMessageType of(byte id) {
         return RAKNET_MESSAGE_TYPES.get(id);
     }
 
-    RaknetMessage decodeInner(ByteBuf in) {
+    public RaknetMessage decodeBody(ByteBuf in) {
         return decoder.apply(in);
     }
 }

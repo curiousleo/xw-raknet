@@ -18,6 +18,8 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OUT_OF_BAND_INTERNAL;
 
 import com.google.auto.value.AutoValue;
@@ -51,7 +53,12 @@ public abstract class OutOfBandInternal implements RaknetMessage {
     }
 
     @Override
-    public void encodeInner(ByteBuf out) {
+    public int size() {
+        return GUID_SIZE + MAGIC_SIZE + oobData().length;
+    }
+
+    @Override
+    public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeGuid(out, guid());
         out.writeBytes(magic());
         out.writeBytes(oobData());
@@ -62,9 +69,9 @@ public abstract class OutOfBandInternal implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OutOfBandInternal decodeInner(ByteBuf in) {
+    public static OutOfBandInternal decodeBody(ByteBuf in) {
         long guid = ByteBufHelper.readGuid(in);
-        byte[] magic = new byte[16];
+        byte[] magic = new byte[Constants.MAGIC_SIZE];
         in.readBytes(magic);
         byte[] oobData = new byte[in.readableBytes()];
         in.readBytes(oobData);
