@@ -17,8 +17,6 @@
  */
 package eu.xworlds.util.raknet;
 
-import java.util.logging.Level;
-
 import eu.xworlds.util.raknet.protocol.InvalidRaknetMessage;
 import eu.xworlds.util.raknet.protocol.RaknetMessage;
 import eu.xworlds.util.raknet.protocol.TargetedMessage;
@@ -30,28 +28,22 @@ import io.netty.channel.SimpleChannelInboundHandler;
  * 
  * @author mepeisen
  */
-class RaknetTrace extends SimpleChannelInboundHandler<RaknetMessage>
+class RaknetTrace extends SimpleChannelInboundHandler<TargetedMessage>
 {
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, RaknetMessage msg) throws Exception
+    protected void channelRead0(ChannelHandlerContext ctx, TargetedMessage msg) throws Exception
     {
-        if (msg instanceof InvalidRaknetMessage)
+        RaknetMessage inner = msg.inner();
+        if (inner instanceof InvalidRaknetMessage)
         {
-            final InvalidRaknetMessage inv = (InvalidRaknetMessage) msg;
-            if (inv.getEx() == null)
-            {
-                RaknetServer.LOGGER.finest("invalid/unknown raknet code from from " + inv.getSender() + " to " + inv.getReceiver() + ": " + msg);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$                
-            }
-            else
-            {
-                RaknetServer.LOGGER.log(Level.FINEST, "exception analyzing raknet message from " + inv.getSender() + " to " + inv.getReceiver() + ": " + msg, inv.getEx());   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
-            }
+            final InvalidRaknetMessage inv = (InvalidRaknetMessage) inner;
+            //noinspection ThrowableResultOfMethodCallIgnored
+            RaknetServer.LOGGER.finest("invalid/unknown raknet code from from " + msg.sender() + " to " + msg.receiver() + ": " + inv);
         }
-        else if (msg instanceof TargetedMessage)
+        else if (inner instanceof TargetedMessage)
         {
-            final TargetedMessage tmsg = (TargetedMessage) msg;
-            RaknetServer.LOGGER.finest("incoming data from " + tmsg.getSender() + " to " + tmsg.getReceiver() + ": " + msg);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
+            RaknetServer.LOGGER.finest("incoming data from " + msg.sender() + " to " + msg.receiver() + ": " + inner);   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
         }
         else
         {

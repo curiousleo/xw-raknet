@@ -15,118 +15,50 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.CONNECTED_PONG;
 
+import com.google.auto.value.AutoValue;
+import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "ConnectedPong".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * Pong from a connected system.  Update timestamps (internal use only)
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>Ping from a connected system. Update timestamps (internal use only)
  */
-public class ConnectedPong extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x03;
-    
-    /** the ping time */
-    private long pingTime;
-    
-    /** the pong time */
-    private long pongTime;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public ConnectedPong(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+@AutoValue
+public abstract class ConnectedPong implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public ConnectedPong(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
+    public abstract long ping();
+
+    public abstract long pong();
+
+    @Override
+    public byte id() {
+        return (byte) CONNECTED_PONG.ordinal();
     }
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    /**
-     * @return the pingTime
-     */
-    public long getPingTime()
-    {
-        return this.pingTime;
+    public void encodeInner(ByteBuf out) {
+        ByteBufHelper.writeTime(out, ping());
+        ByteBufHelper.writeTime(out, pong());
     }
 
     /**
-     * @param pingTime the pingTime to set
+     * Decodes {@link ByteBuf} into {@link ConnectedPong}.
+     *
+     * @param in the Raknet message (without leading byte)
      */
-    public void setPingTime(long pingTime)
-    {
-        this.pingTime = pingTime;
+    public static ConnectedPong decodeInner(ByteBuf in) {
+        long pingTime = ByteBufHelper.readTime(in);
+        long pongTime = ByteBufHelper.readTime(in);
+        return new AutoValue_ConnectedPong(pingTime, pongTime);
     }
 
-    /**
-     * @return the pongTime
-     */
-    public long getPongTime()
-    {
-        return this.pongTime;
+    public static ConnectedPong create(long ping, long pong) {
+        return new AutoValue_ConnectedPong(ping, pong);
     }
-
-    /**
-     * @param pongTime the pongTime to set
-     */
-    public void setPongTime(long pongTime)
-    {
-        this.pongTime = pongTime;
-    }
-
-    @Override
-    public ByteBuf encode()
-    {
-        final ByteBuf result = Unpooled.buffer(1 + SIZE_TIME + SIZE_TIME);
-        result.order(ByteOrder.BIG_ENDIAN);
-        result.writeByte(ID);
-        writeTime(result, this.pingTime);
-        writeTime(result, this.pongTime);
-        return result;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.pingTime = readTime(buf);
-        this.pongTime = readTime(buf);
-    }
-
-    @Override
-    public String toString()
-    {
-        return "ConnectedPong [pingTime=" + this.pingTime + ", pongTime=" + this.pongTime + "]";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
-    }
-    
 }

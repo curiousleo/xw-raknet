@@ -17,11 +17,12 @@
  */
 package eu.xworlds.util.raknet.handler;
 
-import java.util.Collection;
-
 import eu.xworlds.util.raknet.RaknetMessageHandler;
 import eu.xworlds.util.raknet.RaknetSession;
 import eu.xworlds.util.raknet.protocol.ConnectedPong;
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
+
+import java.util.Collection;
 
 /**
  * Handles incoming pong.
@@ -32,9 +33,10 @@ public class ConnectedPongHandler implements RaknetMessageHandler<ConnectedPong>
 {
 
     @Override
-    public void handle(ConnectedPong message, RaknetSession session, Collection<Object> out)
+    public void handle(TargetedMessage<ConnectedPong> message, RaknetSession session, Collection<Object> out)
     {
-        session.getPings().registerAnswer(message.getPingTime(), message.getPongTime());
+        ConnectedPong pong = message.inner();
+        session.getPings().registerAnswer(pong.ping(), pong.pong());
     }
     
 }

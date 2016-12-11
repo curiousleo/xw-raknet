@@ -17,22 +17,23 @@
  */
 package eu.xworlds.util.raknet.handler;
 
-import java.util.Collection;
-
 import eu.xworlds.util.raknet.RaknetMessageHandler;
 import eu.xworlds.util.raknet.RaknetServer;
 import eu.xworlds.util.raknet.RaknetSession;
 import eu.xworlds.util.raknet.protocol.ConnectedPing;
 import eu.xworlds.util.raknet.protocol.ConnectedPong;
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
+
+import java.util.Collection;
 
 /**
  * Handles incoming ping.
- * 
+ *
  * @author mepeisen
  */
 public class ConnectedPingHandler implements RaknetMessageHandler<ConnectedPing>
 {
- 
+
     /** the raknet server */
     private final RaknetServer server;
 
@@ -46,12 +47,10 @@ public class ConnectedPingHandler implements RaknetMessageHandler<ConnectedPing>
     }
 
     @Override
-    public void handle(ConnectedPing message, RaknetSession session, Collection<Object> out)
+    public void handle(TargetedMessage<ConnectedPing> message, RaknetSession session, Collection<Object> out)
     {
-        final ConnectedPong pong = new ConnectedPong(message.getReceiver(), message.getSender());
-        pong.setPingTime(message.getTime());
-        pong.setPongTime(this.server.getRaknetTime());
-        session.send(pong);
+        final ConnectedPong pong = ConnectedPong.create(message.inner().time(), this.server.getRaknetTime());
+        session.send(TargetedMessage.create(message.receiver(), message.sender(), pong));
     }
-    
+
 }

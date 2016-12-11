@@ -15,95 +15,35 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-
+import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 
-/**
- * Some invalid raknet message.
- * 
- * @author mepeisen
- */
-public class InvalidRaknetMessage extends TargetedMessage
-{
-    
-    /** the first 1500 bytes */
-    private byte[] payload;
-    
-    /** the raknet message id */
-    private byte id;
-    
-    /** the exception during encoding */
-    private Exception ex;
-    
-    /**
-     * Constructor for incoming message.
-     * @param id the message id
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public InvalidRaknetMessage(byte id, ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-        this.id = id;
-    }
-    
-    /**
-     * Constructor for incoming message.
-     * @param id the message id
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     * @param ex exception
-     */
-    public InvalidRaknetMessage(byte id, ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver, Exception ex)
-    {
-        super(buf, sender, receiver);
-        this.ex = ex;
-        this.id = id;
-    }
+@AutoValue
+public abstract class InvalidRaknetMessage implements RaknetMessage {
+    @SuppressWarnings("mutable")
+    public abstract byte[] payload();
 
     @Override
-    public byte getId()
-    {
-        return this.id;
-    }
-    
-    /**
-     * @return the payload
-     */
-    public byte[] getPayload()
-    {
-        return this.payload;
+    public abstract byte id();
+
+    @Override
+    public void encodeInner(ByteBuf out) {
+        throw new UnsupportedOperationException("Cannot encode invalid message");
     }
 
     /**
-     * @return the ex
+     * Creates {@link RaknetMessage} for invalid Raknet message.
+     *
+     * @param id the Raknet messsage id (leading byte of the message)
+     * @param in the Raknet message (without leading byte)
      */
-    public Exception getEx()
-    {
-        return this.ex;
+    public static InvalidRaknetMessage create(byte id, ByteBuf in) {
+        int size = Math.min(1500, in.readableBytes());
+        byte[] payload = new byte[size];
+        in.readBytes(payload);
+        return new AutoValue_InvalidRaknetMessage(payload, id);
     }
-
-    @Override
-    public ByteBuf encode()
-    {
-        throw new IllegalStateException("Not allowed"); //$NON-NLS-1$
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.payload = buf.readBytes(Math.min(1500, buf.readableBytes())).array();
-    }
-
-    @Override
-    public String toString()
-    {
-        return "InvalidRaknetMessage [payload=" + tohex(this.payload) + ", id=" + this.id + ", ex=" + this.ex + "]";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-    }
-    
 }

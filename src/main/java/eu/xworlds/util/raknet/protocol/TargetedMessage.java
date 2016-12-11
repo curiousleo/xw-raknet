@@ -18,69 +18,34 @@
 
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-
+import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
 
-/**
- * Abstract base class that can be used for raknet messages.
- * 
- * @author mepeisen
- *        
- */
-public abstract class TargetedMessage extends BaseMessage
-{
-    
-    /** the sender */
-    private final InetSocketAddress sender;
-    
-    /** the receiver */
-    private final InetSocketAddress receiver;
-    
-    /**
-     * Constructor for outgoing messages.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public TargetedMessage(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        this.sender = sender;
-        this.receiver = receiver;
-    }
-    
-    /**
-     * Constructor for messages with targets
-     * @param buf incoming data
-     * @param sender message sender
-     * @param receiver message receiver
-     */
-    public TargetedMessage(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        this.sender = sender;
-        this.receiver = receiver;
-        this.parseMessage(buf);
-    }
-    
-    /**
-     * Parses incoming message
-     * @param buf parse message.
-     */
-    protected abstract void parseMessage(ByteBuf buf);
-    
-    /**
-     * @return the sender
-     */
-    public InetSocketAddress getSender()
-    {
-        return this.sender;
-    }
+import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
+
+@AutoValue
+public abstract class TargetedMessage<T extends RaknetMessage> {
+
+    public abstract InetSocketAddress sender();
+
+    public abstract InetSocketAddress receiver();
+
+    public abstract T inner();
 
     /**
-     * @return the receiver
+     * Encodes {@link RaknetMessage} into {@link ByteBuf}.
+     *
+     * @param out the encoded Raknet message
      */
-    public InetSocketAddress getReceiver()
-    {
-        return this.receiver;
+    public final void encode(ByteBuf out) {
+        out.order(ByteOrder.BIG_ENDIAN);
+        out.writeByte(inner().id());
+        inner().encodeInner(out);
     }
-    
+
+    public static <T extends RaknetMessage> TargetedMessage create(InetSocketAddress sender,
+            InetSocketAddress receiver, T inner) {
+        return new AutoValue_TargetedMessage<T>(sender, receiver, inner);
+    }
 }

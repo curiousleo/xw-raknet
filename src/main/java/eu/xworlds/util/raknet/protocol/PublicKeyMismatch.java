@@ -15,77 +15,30 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.PUBLIC_KEY_MISMATCH;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "PublicKeyMismatch".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * RakPeer - Wrong public key passed to RakPeerInterface::Connect()
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>RakPeer - Same as ID_ADVERTISE_SYSTEM, but intended for internal use rather than being passed
+ * to the user. Second byte indicates type. Used currently for NAT punchthrough for receiver port
+ * advertisement. See ID_NAT_ADVERTISE_RECIPIENT_PORT.
  */
-public class PublicKeyMismatch extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x0C;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public PublicKeyMismatch(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+public class PublicKeyMismatch implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public PublicKeyMismatch(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
-    }
+    private static final PublicKeyMismatch INSTANCE = new PublicKeyMismatch();
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-        final ByteBuf buf = Unpooled.buffer(1);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.writeByte(ID);
-        return buf;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        // no extra data in this package
+    public byte id() {
+        return (byte) PUBLIC_KEY_MISMATCH.ordinal();
     }
 
-    @Override
-    public String toString()
-    {
-        return "PublicKeyMismatch []"; //$NON-NLS-1$
+    public static PublicKeyMismatch decodeInner(ByteBuf in) {
+        return INSTANCE;
     }
-    
 }

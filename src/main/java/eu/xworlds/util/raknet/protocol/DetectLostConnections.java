@@ -15,77 +15,31 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.DETECT_LOST_CONNECTIONS;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "DetectLostConnections".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * A reliable packet to detect lost connections (internal use only)
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>C2S: Initial query: Header(1), OfflineMesageID(16), Protocol number(1), Pad(toMTU), sent with
+ * no fragment set.
+ *
+ * <p>If protocol fails on server, returns ID_INCOMPATIBLE_PROTOCOL_VERSION to client.
  */
-public class DetectLostConnections extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x04;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public DetectLostConnections(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+public class DetectLostConnections implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public DetectLostConnections(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
-    }
+    private static final DetectLostConnections INSTANCE = new DetectLostConnections();
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-        final ByteBuf buf = Unpooled.buffer(1);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.writeByte(ID);
-        return buf;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        // no additional data
+    public byte id() {
+        return (byte) DETECT_LOST_CONNECTIONS.ordinal();
     }
 
-    @Override
-    public String toString()
-    {
-        return "DetectLostConnections []"; //$NON-NLS-1$
+    public static DetectLostConnections decodeInner(ByteBuf in) {
+        return INSTANCE;
     }
-    
 }

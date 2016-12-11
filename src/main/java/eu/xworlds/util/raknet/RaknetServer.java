@@ -336,7 +336,7 @@ public class RaknetServer
         {
             final ChannelPipeline p = ch.pipeline();
             p.addLast(new ConnectionHandler(RaknetServer.this.serverListeners));
-            p.addLast(new RaknetDecoder(RaknetServer.this.messageFactories));
+            p.addLast(new RaknetDecoder());
             if (RaknetServer.this.isTracing)
             {
                 p.addLast(new RaknetTrace());

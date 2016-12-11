@@ -17,7 +17,7 @@
  */
 package eu.xworlds.util.raknet;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
 
 /**
  * @author mepeisen
@@ -30,7 +30,7 @@ public interface RaknetSession
      * Sends given message to client.
      * @param msg message
      */
-    void send(RaknetMessage msg);
+    void send(TargetedMessage msg);
 
     /**
      * Returns the ping support for raknet sessions.

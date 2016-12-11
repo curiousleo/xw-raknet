@@ -17,7 +17,7 @@
  */
 package eu.xworlds.util.raknet;
 
-import eu.xworlds.util.raknet.protocol.RaknetMessage;
+import eu.xworlds.util.raknet.protocol.TargetedMessage;
 
 /**
  * @author mepeisen
@@ -33,7 +33,7 @@ class RaknetSessionImpl implements RaknetSession
     }
 
     @Override
-    public void send(RaknetMessage msg) {
+    public void send(TargetedMessage msg) {
         // TODO
         throw new UnsupportedOperationException("send");
     }

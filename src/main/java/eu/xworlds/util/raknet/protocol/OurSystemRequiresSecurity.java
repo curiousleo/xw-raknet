@@ -15,77 +15,28 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OUR_SYSTEM_REQUIRES_SECURITY;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "OurSystemRequiresSecurity".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * RakPeer - We passed a public key to RakPeerInterface::Connect(), but the other system did not have security turned on
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>RakPeer - Wrong public key passed to RakPeerInterface::Connect().
  */
-public class OurSystemRequiresSecurity extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x0B;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OurSystemRequiresSecurity(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+public class OurSystemRequiresSecurity implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OurSystemRequiresSecurity(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
-    }
+    private static final OurSystemRequiresSecurity INSTANCE = new OurSystemRequiresSecurity();
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-        final ByteBuf buf = Unpooled.buffer(1);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.writeByte(ID);
-        return buf;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        // no extra data
+    public byte id() {
+        return (byte) OUR_SYSTEM_REQUIRES_SECURITY.ordinal();
     }
 
-    @Override
-    public String toString()
-    {
-        return "OurSystemRequiresSecurity []"; //$NON-NLS-1$
+    public static OurSystemRequiresSecurity decodeInner(ByteBuf in) {
+        return INSTANCE;
     }
-    
 }

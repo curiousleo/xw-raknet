@@ -17,17 +17,18 @@
  */
 package eu.xworlds.util.raknet;
 
-import java.util.Collection;
-
+import eu.xworlds.util.raknet.protocol.RaknetMessage;
 import eu.xworlds.util.raknet.protocol.TargetedMessage;
+
+import java.util.Collection;
 
 /**
  * @author mepeisen
  *
  */
-public interface RaknetMessageHandler<T extends TargetedMessage>
+public interface RaknetMessageHandler<T extends RaknetMessage>
 {
     
-    void handle(T message, RaknetSession session, Collection<Object> out);
+    void handle(TargetedMessage<T> message, RaknetSession session, Collection<Object> out);
     
 }

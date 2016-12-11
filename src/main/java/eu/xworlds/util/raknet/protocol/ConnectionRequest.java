@@ -15,240 +15,77 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.CONNECTION_REQUEST;
 
+import com.google.auto.value.AutoValue;
+import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "ConnectionRequest".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * C2S: Header(1), GUID(8), Timestamp, HasSecurity(1), Proof(32)
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>RakPeer - Remote system requires secure connections, pass a public key to
+ * RakPeerInterface::Connect().
  */
-public class ConnectionRequest extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x09;
-    
-    /** the client guid */
-    private long clientGuid;
-    
-    /** the ping timestamp */
-    private long time;
-    
-    /** true for security */
-    private boolean doSecurity;
-    
-    /** the security proof (32 bytes) */
-    private byte[] proof;
-    
-    /** true for identity */
-    private boolean doIdentity;
-    
-    /** identity */
-    private byte[] identity;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public ConnectionRequest(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+@AutoValue
+public abstract class ConnectionRequest implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public ConnectionRequest(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
+    public abstract long clientGuid();
+
+    public abstract long time();
+
+    public abstract boolean doSecurity();
+
+    @SuppressWarnings("mutable")
+    public abstract byte[] proof();
+
+    public abstract boolean doIdentity();
+
+    @SuppressWarnings("mutable")
+    public abstract byte[] identity();
+
+    @Override
+    public byte id() {
+        return (byte) CONNECTION_REQUEST.ordinal();
     }
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    /**
-     * @return the clientGuid
-     */
-    public long getClientGuid()
-    {
-        return this.clientGuid;
-    }
-
-    /**
-     * @param clientGuid the clientGuid to set
-     */
-    public void setClientGuid(long clientGuid)
-    {
-        this.clientGuid = clientGuid;
-    }
-
-    /**
-     * @return the time
-     */
-    public long getTime()
-    {
-        return this.time;
-    }
-
-    /**
-     * @param time the time to set
-     */
-    public void setTime(long time)
-    {
-        this.time = time;
-    }
-
-    /**
-     * @return the doSecurity
-     */
-    public boolean isDoSecurity()
-    {
-        return this.doSecurity;
-    }
-
-    /**
-     * @return the proof
-     */
-    public byte[] getProof()
-    {
-        return this.proof;
-    }
-
-    /**
-     * @return the doIdentity
-     */
-    public boolean isDoIdentity()
-    {
-        return this.doIdentity;
-    }
-
-    /**
-     * @return the identity
-     */
-    public byte[] getIdentity()
-    {
-        return this.identity;
-    }
-    
-    /**
-     * Sets doSecurity to false
-     */
-    public void setNoSecurity()
-    {
-        this.doSecurity = false;
-    }
-    
-    /**
-     * Sets security to true with given proof
-     * @param proof security proof
-     * @throws IllegalArgumentException thrown if proof is invalid
-     */
-    public void setSecurity(byte[] proof)
-    {
-        if (proof == null || proof.length != 32)
-        {
-            throw new IllegalArgumentException("Invalid proof"); //$NON-NLS-1$
-        }
-        this.doSecurity = true;
-        this.proof = proof;
-        this.doIdentity = false;
-    }
-    
-    /**
-     * Sets security to true with given proof and identity
-     * @param proof security proof
-     * @param ident security identity
-     * @throws IllegalArgumentException thrown if proof or identity are invalid
-     */
-    public void setSecurity(byte[] proof, byte[] ident)
-    {
-        if (proof == null || proof.length != 32)
-        {
-            throw new IllegalArgumentException("Invalid proof"); //$NON-NLS-1$
-        }
-        if (ident == null || ident.length != EASYHANDSHAKE_IDENTITY_BYTES)
-        {
-            throw new IllegalArgumentException("Invalid ident"); //$NON-NLS-1$
-        }
-        this.doSecurity = true;
-        this.proof = proof;
-        this.doIdentity = true;
-        this.identity = ident;
-    }
-
-    @Override
-    public ByteBuf encode()
-    {
-        int size = 1 + SIZE_GUID + SIZE_TIME + 1;
-        if (this.doSecurity)
-        {
-            size += 32 + 1;
-            if (this.doIdentity)
-            {
-                size += EASYHANDSHAKE_IDENTITY_BYTES;
-            }
-        }
-        final ByteBuf buf = Unpooled.buffer(size);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.writeByte(ID);
-        writeGuid(buf, this.clientGuid);
-        writeTime(buf, this.time);
-        buf.writeBoolean(this.doSecurity);
-        if (this.doSecurity)
-        {
-            buf.writeBytes(this.proof);
-            buf.writeBoolean(this.doIdentity);
-            if (this.doIdentity)
-            {
-                buf.writeBytes(this.identity);
-            }
-        }
-        return buf;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.clientGuid = readGuid(buf);
-        this.time = readTime(buf);
-        this.doSecurity = buf.readBoolean();
-        if (this.doSecurity)
-        {
-            this.proof = new byte[32]; // TODO have a constant value of the size
-            buf.readBytes(this.proof);
-            this.doIdentity = buf.readBoolean();
-            if (this.doIdentity)
-            {
-                this.identity = new byte[EASYHANDSHAKE_IDENTITY_BYTES];
-                buf.readBytes(this.identity);
+    public void encodeInner(ByteBuf out) {
+        ByteBufHelper.writeGuid(out, clientGuid());
+        ByteBufHelper.writeTime(out, time());
+        out.writeBoolean(doSecurity());
+        if (doSecurity()) {
+            out.writeBytes(proof());
+            out.writeBoolean(doIdentity());
+            if (doIdentity()) {
+                out.writeBytes(identity());
             }
         }
     }
 
-    @Override
-    public String toString()
-    {
-        return "ConnectionRequest [clientGuid=" + this.clientGuid + ", time=" + this.time + ", doSecurity=" + String.valueOf(this.doSecurity) + ", proof=" + tohex(this.proof) + ", doIdentity="   //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$
-                + String.valueOf(this.doIdentity) + ", identity=" + tohex(this.identity) + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+    /**
+     * Decodes {@link ByteBuf} into {@link ConnectionRequest}.
+     *
+     * @param in the Raknet message (without leading byte)
+     */
+    public static ConnectionRequest decodeInner(ByteBuf in) {
+        long clientGuid = ByteBufHelper.readGuid(in);
+        long time = ByteBufHelper.readTime(in);
+        boolean doSecurity = in.readBoolean();
+        byte[] proof = new byte[32];
+        boolean doIdentity = false;
+        byte[] identity = new byte[160];
+        if (doSecurity) {
+            in.readBytes(proof);
+            doIdentity = in.readBoolean();
+            if (doIdentity) {
+                in.readBytes(identity);
+            }
+        }
+        return new AutoValue_ConnectionRequest(clientGuid, time, doSecurity, proof, doIdentity,
+                identity);
     }
-    
 }

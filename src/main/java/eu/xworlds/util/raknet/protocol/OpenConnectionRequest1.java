@@ -15,143 +15,55 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REQUEST_1;
 
-import org.apache.commons.codec.binary.Hex;
-
+import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "OpenConnectionRequest1".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * C2S: Initial query: Header(1), OfflineMesageID(16), Protocol number(1), Pad(toMTU), sent with no fragment set.
- * If protocol fails on server, returns ID_INCOMPATIBLE_PROTOCOL_VERSION to client
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>S2C: Header(1), OfflineMessageID(16), server GUID(8), HasSecurity(1), Cookie(4,
+ * if HasSecurity), public key (if do security is true), MTU(2). If public key fails on client,
+ * returns ID_PUBLIC_KEY_MISMATCH
  */
-public class OpenConnectionRequest1 extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x05;
-    
-    /** the magic */
-    private byte[] magic;
-    
-    /** the raknet protocol version */
-    private byte procotolVersion;
-    
-    /** the mtu payload */
-    private byte[] mtuPayload;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OpenConnectionRequest1(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+@AutoValue
+public abstract class OpenConnectionRequest1 implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OpenConnectionRequest1(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
-    }
+    @SuppressWarnings("mutable")
+    public abstract byte[] magic();
 
-    /**
-     * @return the magic
-     */
-    public byte[] getMagic()
-    {
-        return this.magic;
-    }
+    public abstract byte protocolVersion();
 
-    /**
-     * @param magic the magic to set
-     */
-    public void setMagic(byte[] magic)
-    {
-        this.magic = magic;
-    }
+    @SuppressWarnings("mutable")
+    public abstract byte[] mtuPayload();
 
-    /**
-     * @return the procotolVersion
-     */
-    public byte getProcotolVersion()
-    {
-        return this.procotolVersion;
-    }
-
-    /**
-     * @param procotolVersion the procotolVersion to set
-     */
-    public void setProcotolVersion(byte procotolVersion)
-    {
-        this.procotolVersion = procotolVersion;
-    }
-
-    /**
-     * @return the mtuPayload
-     */
-    public byte[] getMtuPayload()
-    {
-        return this.mtuPayload;
-    }
-
-    /**
-     * @param mtuPayload the mtuPayload to set
-     */
-    public void setMtuPayload(byte[] mtuPayload)
-    {
-        this.mtuPayload = mtuPayload;
+    @Override
+    public byte id() {
+        return (byte) OPEN_CONNECTION_REQUEST_1.ordinal();
     }
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-        final ByteBuf result = Unpooled.buffer(1 + 16 + this.magic.length + 1 + this.mtuPayload.length);
-        result.order(ByteOrder.BIG_ENDIAN);
-        result.writeByte(ID);
-        result.writeBytes(this.magic);
-        result.writeByte(this.procotolVersion);
-        result.writeBytes(this.mtuPayload);
-        return result;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.magic = new byte[MAGIC_BYTES];
-        buf.readBytes(this.magic);
-        this.procotolVersion = buf.readByte();
-        this.mtuPayload = buf.readBytes(buf.readableBytes()).array();
+    public void encodeInner(ByteBuf out) {
+        out.writeBytes(magic());
+        out.writeByte(protocolVersion());
+        out.writeBytes(mtuPayload());
     }
 
-    @Override
-    public String toString()
-    {
-        return "OpenConnectionRequest1 [magic=" + tohex(this.magic) + ", procotolVersion=" + this.procotolVersion + ", mtuPayload=" + Hex.encodeHexString(this.mtuPayload) + "]";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    /**
+     * Decodes {@link ByteBuf} into {@link OpenConnectionRequest1}.
+     *
+     * @param in the Raknet message (without leading byte)
+     */
+    public static OpenConnectionRequest1 decodeInner(ByteBuf in) {
+        byte[] magic = new byte[16];
+        in.readBytes(magic);
+        byte protocolVersion = in.readByte();
+        byte[] mtuPayload = new byte[in.readableBytes()];
+        in.readBytes(mtuPayload);
+        return new AutoValue_OpenConnectionRequest1(magic, protocolVersion, mtuPayload);
     }
-    
 }

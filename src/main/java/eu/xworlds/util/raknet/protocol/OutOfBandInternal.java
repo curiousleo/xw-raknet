@@ -15,152 +15,59 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OUT_OF_BAND_INTERNAL;
 
+import com.google.auto.value.AutoValue;
+import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "OutOfBandInternal".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * RakPeer - Same as ID_ADVERTISE_SYSTEM, but intended for internal use rather than being passed to the user.
- * Second byte indicates type. Used currently for NAT punchthrough for receiver port advertisement. See ID_NAT_ADVERTISE_RECIPIENT_PORT
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>If RakPeerInterface::Send() is called where PacketReliability contains _WITH_ACK_RECEIPT, then
+ * on a later call to RakPeerInterface::Receive() you will get ID_SND_RECEIPT_ACKED or
+ * ID_SND_RECEIPT_LOSS. The message will be 5 bytes long, and bytes 1-4 inclusive will contain a
+ * number in native order containing a number that identifies this message. This number will be
+ * returned by RakPeerInterface::Send() or RakPeerInterface::SendList(). ID_SND_RECEIPT_ACKED means
+ * that the message arrived.
  */
-public class OutOfBandInternal extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x0D;
-    
-    /** the guid */
-    private long guid;
-    
-    /** the magic */
-    private byte[] magic;
-    
-    /** the out of bands extra data */
-    private byte[] oobData;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OutOfBandInternal(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+@AutoValue
+public abstract class OutOfBandInternal implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OutOfBandInternal(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
-    }
+    public abstract long guid();
 
-    /**
-     * @return the guid
-     */
-    public long getGuid()
-    {
-        return this.guid;
-    }
+    @SuppressWarnings("mutable")
+    public abstract byte[] magic();
 
-    /**
-     * @param guid the guid to set
-     */
-    public void setGuid(long guid)
-    {
-        this.guid = guid;
-    }
+    @SuppressWarnings("mutable")
+    public abstract byte[] oobData();
 
-    /**
-     * @return the magic
-     */
-    public byte[] getMagic()
-    {
-        return this.magic;
-    }
-
-    /**
-     * @param magic the magic to set
-     */
-    public void setMagic(byte[] magic)
-    {
-        this.magic = magic;
-    }
-
-    /**
-     * @return the oobData
-     */
-    public byte[] getOobData()
-    {
-        return this.oobData;
-    }
-
-    /**
-     * @param oobData the oobData to set
-     */
-    public void setOobData(byte[] oobData)
-    {
-        this.oobData = oobData;
+    @Override
+    public byte id() {
+        return (byte) OUT_OF_BAND_INTERNAL.ordinal();
     }
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-        int size = 1 + SIZE_GUID + this.magic.length;
-        if (this.oobData != null)
-        {
-            size += this.oobData.length;
-        }
-        final ByteBuf buf = Unpooled.buffer(size);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.writeByte(ID);
-        writeGuid(buf, this.guid);
-        buf.writeBytes(this.magic);
-        if (this.oobData != null)
-        {
-            buf.writeBytes(this.oobData);
-        }
-        return buf;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.guid = readGuid(buf);
-        this.magic = new byte[MAGIC_BYTES];
-        buf.readBytes(this.magic);
-        if (buf.readableBytes() > 0)
-        {
-            this.oobData = buf.readBytes(buf.readableBytes()).array();
-        }
+    public void encodeInner(ByteBuf out) {
+        ByteBufHelper.writeGuid(out, guid());
+        out.writeBytes(magic());
+        out.writeBytes(oobData());
     }
 
-    @Override
-    public String toString()
-    {
-        return "OutOfBandInternal [guid=" + this.guid + ", magic=" + tohex(this.magic) + ", oobData=" + tohex(this.oobData) + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+    /**
+     * Decodes {@link ByteBuf} into {@link OutOfBandInternal}.
+     *
+     * @param in the Raknet message (without leading byte)
+     */
+    public static OutOfBandInternal decodeInner(ByteBuf in) {
+        long guid = ByteBufHelper.readGuid(in);
+        byte[] magic = new byte[16];
+        in.readBytes(magic);
+        byte[] oobData = new byte[in.readableBytes()];
+        in.readBytes(oobData);
+        return new AutoValue_OutOfBandInternal(guid, magic, oobData);
     }
-    
 }

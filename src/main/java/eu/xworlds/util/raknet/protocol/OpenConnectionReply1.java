@@ -15,218 +15,77 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REPLY_1;
 
+import com.google.auto.value.AutoValue;
+import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "OpenConnectionReply1".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * S2C: Header(1), OfflineMesageID(16), server GUID(8), HasSecurity(1), Cookie(4, if HasSecurity)
- * public key (if do security is true), MTU(2). If public key fails on client, returns ID_PUBLIC_KEY_MISMATCH
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>C2S: Header(1), OfflineMesageID(16), Cookie(4, if HasSecurity is true on the server),
+ * clientSupportsSecurity(1 bit), handshakeChallenge (if has security on both server and client),
+ * remoteBindingAddress(6), MTU(2), client GUID(8)
+ *
+ * <p>Connection slot allocated if cookie is valid, server is not full, GUID and IP not already in
+ * use.
  */
-public class OpenConnectionReply1 extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x06;
-    
-    /** the magic */
-    private byte[] magic;
-    
-    /** the server guid */
-    private long serverGuid;
-    
-    /** true if the server has security */
-    private boolean hasSecurity;
-    
-    /** the security cookie */
-    private int securityCookie;
-    
-    /** the public key */
-    private byte[] publicKey;
-    
-    /** the mtu size (unsigned short) */
-    private int mtuSize;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OpenConnectionReply1(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
+@AutoValue
+public abstract class OpenConnectionReply1 implements RaknetMessage {
 
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public OpenConnectionReply1(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
+    @SuppressWarnings("mutable")
+    public abstract byte[] magic();
+
+    public abstract long serverGuid();
+
+    public abstract boolean hasSecurity();
+
+    public abstract int cookie();
+
+    @SuppressWarnings("mutable")
+    public abstract byte[] publicKey();
+
+    public abstract int mtuSize();
+
+    @Override
+    public byte id() {
+        return (byte) OPEN_CONNECTION_REPLY_1.ordinal();
     }
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    /**
-     * @return the magic
-     */
-    public byte[] getMagic()
-    {
-        return this.magic;
-    }
-
-    /**
-     * @param magic the magic to set
-     */
-    public void setMagic(byte[] magic)
-    {
-        this.magic = magic;
-    }
-
-    /**
-     * @return the serverGuid
-     */
-    public long getServerGuid()
-    {
-        return this.serverGuid;
-    }
-
-    /**
-     * @param serverGuid the serverGuid to set
-     */
-    public void setServerGuid(long serverGuid)
-    {
-        this.serverGuid = serverGuid;
-    }
-
-    /**
-     * @return the hasSecurity
-     */
-    public boolean isHasSecurity()
-    {
-        return this.hasSecurity;
-    }
-
-    /**
-     * Sets the security flag to false
-     */
-    public void setNoSecurity()
-    {
-        this.hasSecurity = false;
-    }
-    
-    /**
-     * Sets the security flag to true and the given information
-     * @param securityCookie the security cookie
-     * @param publicKey the public key
-     * @throws IllegalArgumentException thrown if the public key is not 64 bytes long
-     */
-    public void setSecurity(int securityCookie, byte[] publicKey)
-    {
-        if (this.publicKey == null || this.publicKey.length != EASYHANDSHAKE_PUBLIC_KEY_BYTES)
-        {
-            throw new IllegalArgumentException("publicKey"); //$NON-NLS-1$
+    public void encodeInner(ByteBuf out) {
+        out.writeBytes(magic());
+        ByteBufHelper.writeGuid(out, serverGuid());
+        out.writeBoolean(hasSecurity());
+        if (hasSecurity()) {
+            out.writeInt(cookie());
+            out.writeBytes(publicKey());
         }
-        this.hasSecurity = true;
-        this.securityCookie = securityCookie;
-        this.publicKey = publicKey;
+        ByteBufHelper.writeUnsignedShort(out, mtuSize());
     }
 
     /**
-     * @return the securityCookie
+     * Decodes {@link ByteBuf} into {@link OpenConnectionReply1}.
+     *
+     * @param in the Raknet message (without leading byte)
      */
-    public int getSecurityCookie()
-    {
-        return this.securityCookie;
-    }
-
-    /**
-     * @return the publicKey
-     */
-    public byte[] getPublicKey()
-    {
-        return this.publicKey;
-    }
-
-    /**
-     * @return the mtuSize
-     */
-    public int getMtuSize()
-    {
-        return this.mtuSize;
-    }
-
-    /**
-     * @param mtuSize the mtuSize to set
-     */
-    public void setMtuSize(int mtuSize)
-    {
-        this.mtuSize = mtuSize;
-    }
-
-    @Override
-    public ByteBuf encode()
-    {
-        int size = 1 + this.magic.length + SIZE_GUID + 1 + 2;
-        if (this.hasSecurity)
-        {
-            size += 4 + this.publicKey.length;
+    public static OpenConnectionReply1 decodeInner(ByteBuf in) {
+        byte[] magic = new byte[16];
+        in.readBytes(magic);
+        long serverGuid = ByteBufHelper.readGuid(in);
+        boolean hasSecurity = in.readBoolean();
+        int cookie = 0;
+        byte[] publicKey = new byte[64];
+        if (hasSecurity) {
+            cookie = in.readInt();
+            in.readBytes(publicKey);
         }
-        final ByteBuf result = Unpooled.buffer(size);
-        result.order(ByteOrder.BIG_ENDIAN);
-        result.writeByte(ID);
-        result.writeBytes(this.magic);
-        writeGuid(result, this.serverGuid);
-        result.writeBoolean(this.hasSecurity);
-        if (this.hasSecurity)
-        {
-            result.writeInt(this.securityCookie);
-            result.writeBytes(this.publicKey);
-        }
-        writeUnsignedShort(result, this.mtuSize);
-        return result;
+        int mtuSize = in.readUnsignedShort();
+        return new AutoValue_OpenConnectionReply1(magic, serverGuid, hasSecurity, cookie, publicKey,
+                mtuSize);
     }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.magic = new byte[MAGIC_BYTES];
-        buf.readBytes(this.magic);
-        this.serverGuid = readGuid(buf);
-        this.hasSecurity = buf.readBoolean();
-        if (this.hasSecurity)
-        {
-            this.securityCookie = buf.readInt();
-            this.publicKey = new byte[EASYHANDSHAKE_PUBLIC_KEY_BYTES];
-            buf.readBytes(this.publicKey);
-        }
-        this.mtuSize = buf.readUnsignedShort();
-    }
-
-    @Override
-    public String toString()
-    {
-        return "OpenConnectionReply1 [magic=" + tohex(this.magic) + ", serverGuid=" + this.serverGuid + ", hasSecurity=" + String.valueOf(this.hasSecurity) + ", securityCookie=" + this.securityCookie  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-                + ", publicKey=" + tohex(this.publicKey) + ", mtuSize=" + this.mtuSize + "]"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-    }
-    
 }

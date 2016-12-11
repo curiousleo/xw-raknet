@@ -17,13 +17,14 @@
  */
 package eu.xworlds.util.raknet;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import eu.xworlds.util.raknet.protocol.RaknetMessage;
 import eu.xworlds.util.raknet.protocol.TargetedMessage;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Pipeline for incoming server connections.
@@ -95,10 +96,10 @@ class RaknetHandler extends MessageToMessageDecoder<TargetedMessage>
      *            the outgoing message
      */
     @SuppressWarnings("unchecked")
-    private <T extends TargetedMessage> void decode(RaknetMessageHandler<T> handler, TargetedMessage msg, List<Object> out)
+    private <T extends RaknetMessage> void decode(RaknetMessageHandler<T> handler, TargetedMessage msg, List<Object> out)
     {
-        final RaknetSession session = this.server.getOrCreateSession(msg.getSender(), msg.getReceiver());
-        handler.handle((T) msg, session, out);
+        final RaknetSession session = this.server.getOrCreateSession(msg.sender(), msg.receiver());
+        handler.handle((TargetedMessage<T>) msg, session, out);
     }
     
 }

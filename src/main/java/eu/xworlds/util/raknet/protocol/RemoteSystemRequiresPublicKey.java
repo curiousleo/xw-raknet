@@ -15,110 +15,43 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY;
 
+import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "RemoteSystemRequiresPublicKey".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * RakPeer - Remote system requires secure connections, pass a public key to RakPeerInterface::Connect()
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>RakPeer - We passed a public key to RakPeerInterface::Connect(), but the other system did not
+ * have security turned on.
  */
-public class RemoteSystemRequiresPublicKey extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x0A;
-    
-    /**
-     * Possible error types
-     */
-    public enum ErrorType
-    {
-        /** ConnectionReply2 package did not send handshake but we need security */
+@AutoValue
+public abstract class RemoteSystemRequiresPublicKey implements RaknetMessage {
+
+    public enum ErrorType {
         ServerPublicKeyMissing,
-        /** Client did not sent a public key during connect */
         ClientIdentityMissing,
-        /** Client sent a public key but the ident was invalid */
-        ClientIdentityInvalid
-    }
-    
-    /** the error type */
-    private ErrorType error;
-    
-    /**
-     * @return the error
-     */
-    public ErrorType getError()
-    {
-        return this.error;
+        ClientIdentityInvalid,
     }
 
-    /**
-     * @param error the error to set
-     */
-    public void setError(ErrorType error)
-    {
-        this.error = error;
-    }
+    public abstract ErrorType error();
 
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public RemoteSystemRequiresPublicKey(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
-    }
-
-    /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public RemoteSystemRequiresPublicKey(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
+    @Override
+    public byte id() {
+        return (byte) REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY.ordinal();
     }
 
     @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-        final ByteBuf buf = Unpooled.buffer(1 + 1);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.writeByte(ID);
-        buf.writeByte(this.error.ordinal());
-        return buf;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.error = ErrorType.values()[buf.readByte()];
+    public void encodeInner(ByteBuf out) {
+        out.writeByte(error().ordinal());
     }
 
-    @Override
-    public String toString()
-    {
-        return "RemoteSystemRequiresPublicKey [error=" + this.error + "]"; //$NON-NLS-1$ //$NON-NLS-2$
+    public static RemoteSystemRequiresPublicKey decodeInner(ByteBuf in) {
+        ErrorType error = ErrorType.values()[in.readByte()];
+        return new AutoValue_RemoteSystemRequiresPublicKey(error);
     }
-    
 }

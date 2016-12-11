@@ -15,88 +15,49 @@
     along with "nukkit xWorlds plugin". If not, see <http://www.gnu.org/licenses/>.
 
  */
+
 package eu.xworlds.util.raknet.protocol;
 
-import java.net.InetSocketAddress;
-import java.nio.ByteOrder;
+import static eu.xworlds.util.raknet.protocol.RaknetMessageType.UNCONNECTED_PING_OPEN_CONNECTIONS;
 
+import com.google.auto.value.AutoValue;
+import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 /**
- * Message "UnconnectedPingOpenConnections".
- * 
- * <p><b>The following docu is taken from procotol information</b>:</p>
- * 
- * <p>
- * Ping from an unconnected system.  Only reply if we have open connections. Do not update timestamps. (internal use only)
- * </p>
- * 
- * @author mepeisen
+ * <strong>Original documentation:</strong>
+ *
+ * <p>Ping from an unconnected system. Only reply if we have open connections. Do not update
+ * timestamps. (internal use only)
  */
-public class UnconnectedPingOpenConnections extends TargetedMessage
-{
-    
-    /** the raknet message id */
-    public static final byte ID = 0x02;
-    
-    /** the ping timestamp */
-    private long time;
-    
-    /** the magic */
-    private byte[] magic;
-    
-    /**
-     * Constructor for incoming message.
-     * @param buf message data
-     * @param sender message sender.
-     * @param receiver message receiver.
-     */
-    public UnconnectedPingOpenConnections(ByteBuf buf, InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(buf, sender, receiver);
+@AutoValue
+public abstract class UnconnectedPingOpenConnections implements RaknetMessage {
+
+    public abstract long time();
+
+    @SuppressWarnings("mutable")
+    public abstract byte[] magic();
+
+    @Override
+    public byte id() {
+        return (byte) UNCONNECTED_PING_OPEN_CONNECTIONS.ordinal();
+    }
+
+    @Override
+    public void encodeInner(ByteBuf out) {
+        ByteBufHelper.writeTime(out, time());
+        out.writeBytes(magic());
     }
 
     /**
-     * Constructor for outgoing message.
-     * @param sender message sender.
-     * @param receiver message receiver.
+     * Decodes {@link ByteBuf} into {@link UnconnectedPingOpenConnections}.
+     *
+     * @param in the Raknet message (without leading byte)
      */
-    public UnconnectedPingOpenConnections(InetSocketAddress sender, InetSocketAddress receiver)
-    {
-        super(sender, receiver);
+    public static UnconnectedPingOpenConnections decodeInner(ByteBuf in) {
+        long time = ByteBufHelper.readTime(in);
+        byte[] magic = new byte[16];
+        in.readBytes(magic);
+        return new AutoValue_UnconnectedPingOpenConnections(time, magic);
     }
-
-    @Override
-    public byte getId()
-    {
-        return ID;
-    }
-    
-    @Override
-    public ByteBuf encode()
-    {
-
-        final ByteBuf result = Unpooled.buffer(1 + SIZE_TIME + this.magic.length);
-        result.order(ByteOrder.BIG_ENDIAN);
-        result.writeByte(ID);
-        writeTime(result, this.time);
-        result.writeBytes(this.magic);
-        return result;
-    }
-    
-    @Override
-    protected void parseMessage(ByteBuf buf)
-    {
-        this.time = readTime(buf);
-        this.magic = new byte[MAGIC_BYTES];
-        buf.readBytes(this.magic.length);
-    }
-
-    @Override
-    public String toString()
-    {
-        return "UnconnectedPingOpenConnections [time=" + this.time + ", magic=" + tohex(this.magic) + "]";   //$NON-NLS-1$//$NON-NLS-2$//$NON-NLS-3$
-    }
-    
 }
