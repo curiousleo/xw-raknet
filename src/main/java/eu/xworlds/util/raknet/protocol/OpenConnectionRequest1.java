@@ -19,10 +19,12 @@
 package eu.xworlds.util.raknet.protocol;
 
 import static eu.xworlds.util.raknet.protocol.Constants.BYTE_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REQUEST_1;
 
 import com.google.auto.value.AutoValue;
+import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
 
 /**
@@ -34,9 +36,6 @@ import io.netty.buffer.ByteBuf;
  */
 @AutoValue
 public abstract class OpenConnectionRequest1 implements RaknetMessage {
-
-    @SuppressWarnings("mutable")
-    public abstract byte[] magic();
 
     public abstract byte protocolVersion();
 
@@ -55,7 +54,7 @@ public abstract class OpenConnectionRequest1 implements RaknetMessage {
 
     @Override
     public void encodeBody(ByteBuf out) {
-        out.writeBytes(magic());
+        out.writeBytes(MAGIC);
         out.writeByte(protocolVersion());
         out.writeBytes(mtuPayload());
     }
@@ -65,12 +64,15 @@ public abstract class OpenConnectionRequest1 implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OpenConnectionRequest1 decodeBody(ByteBuf in) {
-        byte[] magic = new byte[MAGIC_SIZE];
-        in.readBytes(magic);
+    public static OpenConnectionRequest1 decodeBody(ByteBuf in) throws DecodeException {
+        ByteBufHelper.checkOrSkipMagic(in, true);
         byte protocolVersion = in.readByte();
         byte[] mtuPayload = new byte[in.readableBytes()];
         in.readBytes(mtuPayload);
-        return new AutoValue_OpenConnectionRequest1(magic, protocolVersion, mtuPayload);
+        return new AutoValue_OpenConnectionRequest1(protocolVersion, mtuPayload);
+    }
+
+    public static OpenConnectionRequest1 create(byte protocolVersion, byte[] mtuPayload) {
+        return new AutoValue_OpenConnectionRequest1(protocolVersion, mtuPayload);
     }
 }

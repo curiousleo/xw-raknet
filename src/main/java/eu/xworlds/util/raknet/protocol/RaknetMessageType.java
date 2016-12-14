@@ -43,20 +43,25 @@ public enum RaknetMessageType {
     SND_RECEIPT_ACKED(SndReceiptAcked::decodeBody),
     SND_RECEIPT_LOSS(SndReceiptLoss::decodeBody);
 
-    private static final List<RaknetMessageType> RAKNET_MESSAGE_TYPES =
-            Arrays.asList(RaknetMessageType.values());
+    @FunctionalInterface
+    interface Decoder {
+        RaknetMessage apply(ByteBuf buf) throws DecodeException;
+    }
 
-    private final Function<ByteBuf, RaknetMessage> decoder;
+    private final Decoder decoder;
 
-    RaknetMessageType(Function<ByteBuf, RaknetMessage> decoder) {
+    RaknetMessageType(Decoder decoder) {
         this.decoder = decoder;
     }
 
     public static RaknetMessageType of(byte id) {
-        return RAKNET_MESSAGE_TYPES.get(id);
+        if (id < 0 || id >= RaknetMessageType.values().length) {
+            return null;
+        }
+        return RaknetMessageType.values()[id];
     }
 
-    public RaknetMessage decodeBody(ByteBuf in) {
+    public RaknetMessage decodeBody(ByteBuf in) throws DecodeException {
         return decoder.apply(in);
     }
 }

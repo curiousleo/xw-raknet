@@ -20,6 +20,7 @@ package eu.xworlds.util.raknet.protocol;
 
 import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.SHORT_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REPLY_2;
@@ -37,9 +38,6 @@ import io.netty.buffer.ByteBuf;
 public abstract class OpenConnectionReply2 implements RaknetMessage {
 
     private static final int SECURITY_ANSWER_SIZE = 128;
-
-    @SuppressWarnings("mutable")
-    public abstract byte[] magic();
 
     public abstract long serverGuid();
 
@@ -68,7 +66,7 @@ public abstract class OpenConnectionReply2 implements RaknetMessage {
 
     @Override
     public void encodeBody(ByteBuf out) {
-        out.writeBytes(magic());
+        out.writeBytes(MAGIC);
         ByteBufHelper.writeGuid(out, serverGuid());
         ByteBufHelper.writeUnsignedShort(out, port());
         ByteBufHelper.writeUnsignedShort(out, mtuSize());
@@ -83,9 +81,8 @@ public abstract class OpenConnectionReply2 implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OpenConnectionReply2 decodeBody(ByteBuf in) {
-        byte[] magic = new byte[MAGIC_SIZE];
-        in.readBytes(magic);
+    public static OpenConnectionReply2 decodeBody(ByteBuf in) throws DecodeException {
+        ByteBufHelper.checkOrSkipMagic(in, true);
         long serverGuid = ByteBufHelper.readGuid(in);
         int port = in.readUnsignedShort();
         int mtuSize = in.readUnsignedShort();
@@ -94,7 +91,7 @@ public abstract class OpenConnectionReply2 implements RaknetMessage {
         if (doSecurity) {
             in.readBytes(securityAnswer);
         }
-        return new AutoValue_OpenConnectionReply2(magic, serverGuid, port, mtuSize, doSecurity,
+        return new AutoValue_OpenConnectionReply2(serverGuid, port, mtuSize, doSecurity,
                 securityAnswer);
     }
 }

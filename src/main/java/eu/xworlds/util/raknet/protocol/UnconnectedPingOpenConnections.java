@@ -18,6 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.UNCONNECTED_PING_OPEN_CONNECTIONS;
@@ -37,9 +38,6 @@ public abstract class UnconnectedPingOpenConnections implements RaknetMessage {
 
     public abstract long time();
 
-    @SuppressWarnings("mutable")
-    public abstract byte[] magic();
-
     @Override
     public byte id() {
         return (byte) UNCONNECTED_PING_OPEN_CONNECTIONS.ordinal();
@@ -53,7 +51,7 @@ public abstract class UnconnectedPingOpenConnections implements RaknetMessage {
     @Override
     public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeTime(out, time());
-        out.writeBytes(magic());
+        out.writeBytes(MAGIC);
     }
 
     /**
@@ -61,10 +59,9 @@ public abstract class UnconnectedPingOpenConnections implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static UnconnectedPingOpenConnections decodeBody(ByteBuf in) {
+    public static UnconnectedPingOpenConnections decodeBody(ByteBuf in) throws DecodeException {
         long time = ByteBufHelper.readTime(in);
-        byte[] magic = new byte[Constants.MAGIC_SIZE];
-        in.readBytes(magic);
-        return new AutoValue_UnconnectedPingOpenConnections(time, magic);
+        ByteBufHelper.checkOrSkipMagic(in, true);
+        return new AutoValue_UnconnectedPingOpenConnections(time);
     }
 }

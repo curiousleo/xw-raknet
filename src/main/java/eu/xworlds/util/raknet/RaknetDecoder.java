@@ -18,6 +18,7 @@
 
 package eu.xworlds.util.raknet;
 
+import eu.xworlds.util.raknet.protocol.DecodeException;
 import eu.xworlds.util.raknet.protocol.InvalidRaknetMessage;
 import eu.xworlds.util.raknet.protocol.RaknetMessageType;
 import io.netty.buffer.ByteBuf;
@@ -35,7 +36,7 @@ class RaknetDecoder extends MessageToMessageDecoder<DatagramPacket> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, DatagramPacket msg, List<Object> out)
-            throws Exception {
+            throws DecodeException {
         final ByteBuf buf = msg.content();
         buf.order(ByteOrder.BIG_ENDIAN);
         final byte id = buf.readByte();

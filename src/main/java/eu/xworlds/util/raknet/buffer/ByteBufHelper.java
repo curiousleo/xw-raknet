@@ -1,10 +1,14 @@
 package eu.xworlds.util.raknet.buffer;
 
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
+
+import eu.xworlds.util.raknet.protocol.DecodeException;
 import io.netty.buffer.ByteBuf;
-import org.apache.commons.codec.binary.Hex;
 
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 public class ByteBufHelper {
     /**
@@ -100,6 +104,18 @@ public class ByteBufHelper {
 
     public static long readTime(ByteBuf buf) {
         return buf.readLong();
+    }
+
+    public static void checkOrSkipMagic(ByteBuf buf, boolean check) throws DecodeException {
+        if (!check) {
+            buf.skipBytes(MAGIC_SIZE);
+            return;
+        }
+        byte[] magic = new byte[MAGIC_SIZE];
+        buf.readBytes(magic);
+        if (!Arrays.equals(magic, MAGIC)) {
+            throw new DecodeException();
+        }
     }
 
     public static void writeTime(ByteBuf buf, long time) {

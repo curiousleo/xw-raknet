@@ -18,6 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.UNCONNECTED_PING;
@@ -25,6 +26,8 @@ import static eu.xworlds.util.raknet.protocol.RaknetMessageType.UNCONNECTED_PING
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
+
+import java.util.Arrays;
 
 /**
  * <strong>Original documentation:</strong>
@@ -35,9 +38,6 @@ import io.netty.buffer.ByteBuf;
 public abstract class UnconnectedPing implements RaknetMessage {
 
     public abstract long time();
-
-    @SuppressWarnings("mutable")
-    public abstract byte[] magic();
 
     @Override
     public byte id() {
@@ -52,7 +52,7 @@ public abstract class UnconnectedPing implements RaknetMessage {
     @Override
     public void encodeBody(ByteBuf out) {
         ByteBufHelper.writeTime(out, time());
-        out.writeBytes(magic());
+        out.writeBytes(MAGIC);
     }
 
     /**
@@ -60,10 +60,9 @@ public abstract class UnconnectedPing implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static UnconnectedPing decodeBody(ByteBuf in) {
+    public static UnconnectedPing decodeBody(ByteBuf in) throws DecodeException {
         long time = ByteBufHelper.readTime(in);
-        byte[] magic = new byte[Constants.MAGIC_SIZE];
-        in.readBytes(magic);
-        return new AutoValue_UnconnectedPing(time, magic);
+        ByteBufHelper.checkOrSkipMagic(in, true);
+        return new AutoValue_UnconnectedPing(time);
     }
 }

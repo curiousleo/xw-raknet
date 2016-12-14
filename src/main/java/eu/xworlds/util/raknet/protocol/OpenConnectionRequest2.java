@@ -20,6 +20,7 @@ package eu.xworlds.util.raknet.protocol;
 
 import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REQUEST_2;
 
@@ -35,9 +36,6 @@ import io.netty.buffer.ByteBuf;
  */
 @AutoValue
 public abstract class OpenConnectionRequest2 implements RaknetMessage {
-
-    @SuppressWarnings("mutable")
-    public abstract byte[] magic();
 
     public abstract boolean useSecurity();
 
@@ -73,7 +71,7 @@ public abstract class OpenConnectionRequest2 implements RaknetMessage {
 
     @Override
     public void encodeBody(ByteBuf out) {
-        out.writeBytes(magic());
+        out.writeBytes(MAGIC);
         if (useSecurity()) {
             out.writeInt(cookie());
             out.writeBoolean(clientWroteChallenge());

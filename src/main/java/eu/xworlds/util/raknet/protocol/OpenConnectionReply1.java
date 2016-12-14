@@ -21,6 +21,7 @@ package eu.xworlds.util.raknet.protocol;
 import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
+import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.SHORT_SIZE;
 import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REPLY_1;
@@ -43,9 +44,6 @@ import io.netty.buffer.ByteBuf;
 public abstract class OpenConnectionReply1 implements RaknetMessage {
 
     private static final int PUBLIC_KEY_SIZE = 64;
-
-    @SuppressWarnings("mutable")
-    public abstract byte[] magic();
 
     public abstract long serverGuid();
 
@@ -75,7 +73,7 @@ public abstract class OpenConnectionReply1 implements RaknetMessage {
 
     @Override
     public void encodeBody(ByteBuf out) {
-        out.writeBytes(magic());
+        out.writeBytes(MAGIC);
         ByteBufHelper.writeGuid(out, serverGuid());
         out.writeBoolean(hasSecurity());
         if (hasSecurity()) {
@@ -90,9 +88,8 @@ public abstract class OpenConnectionReply1 implements RaknetMessage {
      *
      * @param in the Raknet message (without leading byte)
      */
-    public static OpenConnectionReply1 decodeBody(ByteBuf in) {
-        byte[] magic = new byte[MAGIC_SIZE];
-        in.readBytes(magic);
+    public static OpenConnectionReply1 decodeBody(ByteBuf in) throws DecodeException {
+        ByteBufHelper.checkOrSkipMagic(in, true);
         long serverGuid = ByteBufHelper.readGuid(in);
         boolean hasSecurity = in.readBoolean();
         int cookie = 0;
@@ -102,7 +99,7 @@ public abstract class OpenConnectionReply1 implements RaknetMessage {
             in.readBytes(publicKey);
         }
         int mtuSize = in.readUnsignedShort();
-        return new AutoValue_OpenConnectionReply1(magic, serverGuid, hasSecurity, cookie, publicKey,
+        return new AutoValue_OpenConnectionReply1(serverGuid, hasSecurity, cookie, publicKey,
                 mtuSize);
     }
 }
