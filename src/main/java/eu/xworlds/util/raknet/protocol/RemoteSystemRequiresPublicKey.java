@@ -19,7 +19,7 @@
 package eu.xworlds.util.raknet.protocol;
 
 import static eu.xworlds.util.raknet.protocol.Constants.BYTE_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.REMOTE_SYSTEM_REQUIRES_PUBLIC_KEY;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;

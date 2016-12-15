@@ -21,7 +21,7 @@ package eu.xworlds.util.raknet.protocol;
 import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OUT_OF_BAND_INTERNAL;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.OUT_OF_BAND_INTERNAL;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;

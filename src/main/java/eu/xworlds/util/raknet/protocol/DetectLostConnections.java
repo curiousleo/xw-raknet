@@ -18,7 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.DETECT_LOST_CONNECTIONS;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.DETECT_LOST_CONNECTIONS;
 
 import io.netty.buffer.ByteBuf;
 

@@ -18,7 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.PUBLIC_KEY_MISMATCH;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.PUBLIC_KEY_MISMATCH;
 
 import io.netty.buffer.ByteBuf;
 

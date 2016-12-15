@@ -18,11 +18,8 @@
 
 package eu.xworlds.util.raknet.protocol;
 
-import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
-import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
-import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REQUEST_2;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.OPEN_CONNECTION_REQUEST_2;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;

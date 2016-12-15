@@ -21,7 +21,7 @@ package eu.xworlds.util.raknet.protocol;
 import static eu.xworlds.util.raknet.protocol.Constants.BOOL_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.GUID_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.CONNECTION_REQUEST;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.CONNECTION_REQUEST;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;

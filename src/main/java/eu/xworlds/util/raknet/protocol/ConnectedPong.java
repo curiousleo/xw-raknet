@@ -19,7 +19,7 @@
 package eu.xworlds.util.raknet.protocol;
 
 import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.CONNECTED_PONG;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.CONNECTED_PONG;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;

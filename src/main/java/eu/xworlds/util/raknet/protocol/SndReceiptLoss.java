@@ -37,7 +37,7 @@ public abstract class SndReceiptLoss implements RaknetMessage {
 
     @Override
     public byte id() {
-        return (byte) RaknetMessageType.SND_RECEIPT_LOSS.ordinal();
+        return (byte) Decoder.MessageType.SND_RECEIPT_LOSS.ordinal();
     }
 
     @Override

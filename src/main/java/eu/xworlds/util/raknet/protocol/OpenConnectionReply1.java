@@ -24,7 +24,7 @@ import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.SHORT_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OPEN_CONNECTION_REPLY_1;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.OPEN_CONNECTION_REPLY_1;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;

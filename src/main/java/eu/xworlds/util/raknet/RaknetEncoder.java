@@ -17,17 +17,12 @@ import java.util.List;
 public class RaknetEncoder<T extends RaknetMessage>
         extends MessageToMessageEncoder<TargetedMessage<T>> {
 
-    private final ByteBufAllocator allocator;
-
-    public RaknetEncoder(ByteBufAllocator allocator) {
-        this.allocator = allocator;
-    }
-
     @Override
     protected void encode(ChannelHandlerContext ctx, TargetedMessage<T> msg, List<Object> out)
             throws Exception {
-        final ByteBuf buf = allocator.buffer(msg.size());
-        buf.order(ByteOrder.BIG_ENDIAN);
+        final ByteBuf buf = ctx.alloc()
+                .buffer(msg.size())
+                .order(ByteOrder.BIG_ENDIAN);
         buf.writeByte(msg.inner().id());
         msg.inner().encodeBody(buf);
 

@@ -19,7 +19,7 @@
 package eu.xworlds.util.raknet.protocol;
 
 import static eu.xworlds.util.raknet.protocol.Constants.INT_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.SND_RECEIPT_ACKED;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.SND_RECEIPT_ACKED;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;

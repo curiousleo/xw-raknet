@@ -18,7 +18,7 @@
 
 package eu.xworlds.util.raknet.protocol;
 
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.OUR_SYSTEM_REQUIRES_SECURITY;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.OUR_SYSTEM_REQUIRES_SECURITY;
 
 import io.netty.buffer.ByteBuf;
 

@@ -21,13 +21,11 @@ package eu.xworlds.util.raknet.protocol;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC;
 import static eu.xworlds.util.raknet.protocol.Constants.MAGIC_SIZE;
 import static eu.xworlds.util.raknet.protocol.Constants.TIME_SIZE;
-import static eu.xworlds.util.raknet.protocol.RaknetMessageType.UNCONNECTED_PING;
+import static eu.xworlds.util.raknet.protocol.Decoder.MessageType.UNCONNECTED_PING;
 
 import com.google.auto.value.AutoValue;
 import eu.xworlds.util.raknet.buffer.ByteBufHelper;
 import io.netty.buffer.ByteBuf;
-
-import java.util.Arrays;
 
 /**
  * <strong>Original documentation:</strong>
